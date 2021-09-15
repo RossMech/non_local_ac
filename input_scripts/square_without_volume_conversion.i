@@ -1,3 +1,6 @@
+# Simulation of initial square phase transforming into circle and shrinking
+# due to curved interface
+
 [Mesh]
   type = GeneratedMesh
   dim = 2
