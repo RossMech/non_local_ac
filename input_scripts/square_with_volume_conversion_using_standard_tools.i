@@ -152,6 +152,17 @@
                                mu_loc_b:=D[f_bulk(etaa,etab),etab]'
     function = 'dha_a*mu_loc_a + dha_b*mu_loc_b'
   [../]
+  [./Lagrange_multiplier]
+    type = DerivativeParsedMaterial
+    postprocessor_names = 'psi_int chi_int'
+    function = 'chi_int / psi_int'
+    f_name = L_mult
+  [../]
+  [./stabilization_term]
+    type = DerivativeParsedMaterial
+    material_property_names = 'L_mult L dha_a:=D[ha(etaa,etab),etaa]'
+    function = '-L*L_mult*dha_a'
+  [../]
 []
 
 [AuxVariables]
