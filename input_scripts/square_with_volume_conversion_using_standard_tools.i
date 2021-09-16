@@ -85,6 +85,11 @@
     gamma_names = 'gab'
     mob_name = L
   [../]
+  [./volume_conserver]
+    type = MaterialValueKernel
+    variable = etaa
+    Mat_name = stab_func
+  [../]
   # ===========================================================ORDER_PARAMETER_B
   [./etab_dot]
     type = TimeDerivative
@@ -162,6 +167,7 @@
     type = DerivativeParsedMaterial
     material_property_names = 'L_mult L dha_a:=D[ha(etaa,etab),etaa]'
     function = '-L*L_mult*dha_a'
+    f_name = stab_func
   [../]
 []
 
