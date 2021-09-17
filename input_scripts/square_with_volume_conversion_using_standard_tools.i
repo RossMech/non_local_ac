@@ -123,17 +123,29 @@
     prop_values = '1.0  1.5 1.875 2.4'
   [../]
   # =========================================================Switching Functions
+  #[./ha]
+  #  type = SwitchingFunctionMultiPhaseMaterial
+  #  h_name = ha
+  #  all_etas = 'etaa etab'
+  #  phase_etas = 'etaa'
+  #[../]
+  #[./hb]
+  #  type = SwitchingFunctionMultiPhaseMaterial
+  #  h_name = hb
+  #  all_etas = 'etaa etab'
+  #  phase_etas = 'etab'
+  #[../]
   [./ha]
-    type = SwitchingFunctionMultiPhaseMaterial
-    h_name = ha
-    all_etas = 'etaa etab'
-    phase_etas = 'etaa'
+    type = DerivativeParsedMaterial
+    args = etaa
+    f_name = ha
+    function = etaa
   [../]
   [./hb]
-    type = SwitchingFunctionMultiPhaseMaterial
-    h_name = hb
-    all_etas = 'etaa etab'
-    phase_etas = 'etab'
+    type = DerivativeParsedMaterial
+    args = etab
+    f_name = hb
+    function = etab
   [../]
   # ============================================================Bulk free energy
   [./f_bulk]
@@ -142,7 +154,7 @@
     args = 'etaa etab'
     material_property_names = 'mu gab'
     function = 'mu*((etaa*etaa*etaa*etaa/4-etaa*etaa/2)+(etab*etab*etab*etab/4
-    -etab*etab/2)+(gab/2*etab*etab*etaa*etaa)+(gab/2*etaa*etaa*etab*etab)+1/4)'
+    -etab*etab/2)+(gab*etab*etab*etaa*etaa)+1/4)'
   [../]
   #==================================================Lagrange constant functions
   [./psi]
@@ -171,13 +183,13 @@
   [./stabilization_term_a]
     type = DerivativeParsedMaterial
     material_property_names = 'L_mult L dha_a:=D[ha(etaa,etab),etaa]'
-    function = 'L*L_mult*dha_a'
+    function = '-L*L_mult*dha_a'
     f_name = stab_func_a
   [../]
   [./stabilization_term_b]
     type = DerivativeParsedMaterial
     material_property_names = 'L_mult L dha_b:=D[ha(etaa,etab),etab]'
-    function = 'L*L_mult*dha_b'
+    function = '-L*L_mult*dha_b'
     f_name = stab_func_b
   [../]
 []
@@ -245,10 +257,12 @@
   [./psi_int]
     type = ElementIntegralVariablePostprocessor
     variable = psi_auxvar
+    execute_on = 'INITIAL LINEAR NONLINEAR TIMESTEP_BEGIN TIMESTEP_END'
   [../]
   [./chi_int]
     type = ElementIntegralVariablePostprocessor
     variable = chi_auxvar
+    execute_on = 'INITIAL LINEAR NONLINEAR TIMESTEP_BEGIN TIMESTEP_END'
   [../]
 []
 
@@ -271,7 +285,7 @@
   type = Transient
   solve_type = PJFNK
   scheme = implicit-euler
-  end_time = 1000
+  end_time = 1e8
   l_max_its = 15#30
   nl_max_its = 15#50
   nl_rel_tol = 1e-5 #1e-8
