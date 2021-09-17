@@ -85,10 +85,10 @@
     gamma_names = 'gab'
     mob_name = L
   [../]
-  [./volume_conserver]
+  [./volume_conserver_a]
     type = MaterialValueKernel
     variable = etaa
-    Mat_name = stab_func
+    Mat_name = stab_func_a
   [../]
   # ===========================================================ORDER_PARAMETER_B
   [./etab_dot]
@@ -107,6 +107,11 @@
     v =           'etaa'
     gamma_names = 'gab'
     mob_name = L
+  [../]
+  [./volume_conserver_b]
+    type = MaterialValueKernel
+    variable = etab
+    Mat_name = stab_func_b
   [../]
 []
 
@@ -144,7 +149,7 @@
     type = DerivativeParsedMaterial
     f_name = psi
     args = 'etaa etab'
-    material_property_names = 'dha_a:=D[ha,etaa] dha_b:=D[ha,etab]'
+    material_property_names = 'dha_a:=D[ha(etaa,etab),etaa] dha_b:=D[ha(etaa,etab),etab]'
     function = 'dha_a*dha_a + dha_b*dha_b'
   [../]
   [./chi]
@@ -160,14 +165,20 @@
   [./Lagrange_multiplier]
     type = DerivativeParsedMaterial
     postprocessor_names = 'psi_int chi_int'
-    function = 'chi_int / psi_int'
+    function = 'if(abs(psi_int > 1e-8),chi_int / psi_int,0.0)'
     f_name = L_mult
   [../]
-  [./stabilization_term]
+  [./stabilization_term_a]
     type = DerivativeParsedMaterial
     material_property_names = 'L_mult L dha_a:=D[ha(etaa,etab),etaa]'
-    function = '-L*L_mult*dha_a'
-    f_name = stab_func
+    function = 'L*L_mult*dha_a'
+    f_name = stab_func_a
+  [../]
+  [./stabilization_term_b]
+    type = DerivativeParsedMaterial
+    material_property_names = 'L_mult L dha_b:=D[ha(etaa,etab),etab]'
+    function = 'L*L_mult*dha_b'
+    f_name = stab_func_b
   [../]
 []
 
@@ -259,13 +270,13 @@
 [Executioner]
   type = Transient
   solve_type = PJFNK
-  scheme = bdf2
+  scheme = implicit-euler
   end_time = 1000
   l_max_its = 15#30
   nl_max_its = 15#50
-  nl_rel_tol = 1e-8 #1e-8
-  nl_abs_tol = 1e-9 #1e-11 -9 or 10 for equilibrium
-  l_tol = 1e-5 # or 1e-4
+  nl_rel_tol = 1e-5 #1e-8
+  nl_abs_tol = 1e-6 #1e-11 -9 or 10 for equilibrium
+  l_tol = 1e-4 # or 1e-4
   # Time Stepper: Using Iteration Adaptative here. 5 nl iterations (+-1), and l/nl iteration ratio of 100
   # maximum of 5% increase per time step
   [./TimeStepper]
