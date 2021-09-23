@@ -64,54 +64,52 @@
       int_width = 2.5
     [../]
   [../]
+  [./mua]
+  [../]
+  [./mub]
+  [../]
 []
 
 [Kernels]
-  # ===========================================================ORDER_PARAMETER_A
-  [./etaa_dot]
-    type = TimeDerivative
+  # Note, the equations are reversed. It means, that the equation for order parameter
+  # is used to calculate the variable potential, as it is made in Split CahnHilliard
+  #============================================================ORDER_PARAMETER_A
+  [./mua_eq]
+    type = SplitCHParsed
     variable = etaa
+    f_name = f_bulk
+    kappa_name = kappa
+    w = mua
   [../]
-  [./etaa_interface]
-    type = ACInterface
-    variable = etaa
-    mob_name = L
-    kappa_name = 'kappa'
+  #=========================================================Variable_Potential_A
+  [./detaa_dt]
+    type = CoupledTimeDerivative
+    variable = mua
+    v = etaa
   [../]
-  [./etaa_bulk]
-    type = ACGrGrMulti
-    variable = etaa
-    v =           'etab'
-    gamma_names = 'gab'
-    mob_name = L
-  [../]
-  [./volume_conserver_a]
+  [./etaa_rhs] # maybe implement term (mu - Ldh/deta) for better convergence and automatization purpose?
     type = MaterialValueKernel
-    variable = etaa
-    Mat_name = stab_func_a
+    variable = mua
+    Mat_name = total_func_a
   [../]
-  # ===========================================================ORDER_PARAMETER_B
-  [./etab_dot]
-    type = TimeDerivative
+  #============================================================ORDER_PARAMETER_B
+  [./mub_eq]
+    type = SplitCHParsed
     variable = etab
+    f_name = f_bulk
+    kappa_name = kappa
+    w = mub
   [../]
-  [./etab_interface]
-    type = ACInterface
-    variable = etab
-    mob_name = L
-    kappa_name = 'kappa'
+  #=========================================================Variable_Potential_A
+  [./detab_dt]
+    type = CoupledTimeDerivative
+    variable = mub
+    v = etab
   [../]
-  [./etab_bulk]
-    type = ACGrGrMulti
-    variable = etab
-    v =           'etaa'
-    gamma_names = 'gab'
-    mob_name = L
-  [../]
-  [./volume_conserver_b]
+  [./etab_rhs]
     type = MaterialValueKernel
-    variable = etab
-    Mat_name = stab_func_b
+    variable = mub
+    Mat_name = total_func_b
   [../]
 []
 
@@ -123,29 +121,17 @@
     prop_values = '1.0  1.5 1.875 2.4'
   [../]
   # =========================================================Switching Functions
-  #[./ha]
-  #  type = SwitchingFunctionMultiPhaseMaterial
-  #  h_name = ha
-  #  all_etas = 'etaa etab'
-  #  phase_etas = 'etaa'
-  #[../]
-  #[./hb]
-  #  type = SwitchingFunctionMultiPhaseMaterial
-  #  h_name = hb
-  #  all_etas = 'etaa etab'
-  #  phase_etas = 'etab'
-  #[../]
   [./ha]
-    type = DerivativeParsedMaterial
-    args = etaa
-    f_name = ha
-    function = etaa
+    type = SwitchingFunctionMultiPhaseMaterial
+    h_name = ha
+    all_etas = 'etaa etab'
+    phase_etas = 'etaa'
   [../]
   [./hb]
-    type = DerivativeParsedMaterial
-    args = etab
-    f_name = hb
-    function = etab
+    type = SwitchingFunctionMultiPhaseMaterial
+    h_name = hb
+    all_etas = 'etaa etab'
+    phase_etas = 'etab'
   [../]
   # ============================================================Bulk free energy
   [./f_bulk]
@@ -167,12 +153,10 @@
   [./chi]
     type = DerivativeParsedMaterial
     f_name = chi
-    args = 'etaa etab'
+    args = 'etaa etab mua mub'
     material_property_names = 'dha_a:=D[ha(etaa,etab),etaa]
-                               dha_b:=D[ha(etaa,etab),etab]
-                               mu_loc_a:=D[f_bulk(etaa,etab),etaa]
-                               mu_loc_b:=D[f_bulk(etaa,etab),etab]'
-    function = 'dha_a*mu_loc_a + dha_b*mu_loc_b'
+                               dha_b:=D[ha(etaa,etab),etab]'
+    function = 'dha_a*mua + dha_b*mub'
   [../]
   [./Lagrange_multiplier]
     type = DerivativeParsedMaterial
@@ -180,17 +164,20 @@
     function = 'if(abs(psi_int > 1e-8),chi_int / psi_int,0.0)'
     f_name = L_mult
   [../]
-  [./stabilization_term_a]
+  # functions, which are input in kernel for order parameters
+  [./kernel_term_a]
     type = DerivativeParsedMaterial
+    args = 'etaa etab mua'
     material_property_names = 'L_mult L dha_a:=D[ha(etaa,etab),etaa]'
-    function = '-L*L_mult*dha_a'
-    f_name = stab_func_a
+    function = 'L*(mua - L_mult*dha_a)'
+    f_name = total_func_a
   [../]
-  [./stabilization_term_b]
+  [./kernel_term_b]
     type = DerivativeParsedMaterial
+    args = 'etaa etab mub'
     material_property_names = 'L_mult L dha_b:=D[ha(etaa,etab),etab]'
-    function = '-L*L_mult*dha_b'
-    f_name = stab_func_b
+    function = 'L*(mub  - L_mult*dha_b)'
+    f_name = total_func_b
   [../]
 []
 
@@ -307,7 +294,7 @@
 [Outputs]
   [./exodus]
     type = Exodus
-    interval = 5
+    interval = 50
   [../]
   [./csv]
     type = CSV
