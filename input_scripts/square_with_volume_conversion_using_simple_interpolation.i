@@ -4,12 +4,12 @@
 [Mesh]
   type = GeneratedMesh
   dim = 2
-  nx = 25
-  ny = 25
+  nx = 250
+  ny = 250
   xmin = 0
-  xmax = 50
+  xmax = 500
   ymin = 0
-  ymax = 50
+  ymax = 500
 []
 
 [Adaptivity]
