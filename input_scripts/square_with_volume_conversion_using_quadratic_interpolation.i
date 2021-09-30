@@ -4,12 +4,12 @@
 [Mesh]
   type = GeneratedMesh
   dim = 2
-  nx = 25
-  ny = 25
+  nx = 250
+  ny = 250
   xmin = 0
-  xmax = 50
+  xmax = 500
   ymin = 0
-  ymax = 50
+  ymax = 500
 []
 
 [Adaptivity]
@@ -36,6 +36,7 @@
 []
 
 [Variables]
+  # Order variables
   [./etaa]
     family = LAGRANGE
     order = FIRST
@@ -64,31 +65,30 @@
       int_width = 2.5
     [../]
   [../]
+  # Structural variable potentials
+  [./mua]
+  [../]
 []
 
 [Kernels]
   # ===========================================================ORDER_PARAMETER_A
+  [./etaa_eq]
+    type = SplitCHParsed
+    variable = etaa
+    f_name = f_bulk
+    kappa_name = kappa
+    w = mua
+  [../]
+  #=======================================================STRUCTURAL_POTENTIAL_A
   [./etaa_dot]
-    type = TimeDerivative
-    variable = etaa
+    type = CoupledTimeDerivative
+    variable = mua
+    v = etaa
   [../]
-  [./etaa_interface]
-    type = ACInterface
-    variable = etaa
-    mob_name = L
-    kappa_name = 'kappa'
-  [../]
-  [./etaa_bulk]
-    type = ACGrGrMulti
-    variable = etaa
-    v =           'etab'
-    gamma_names = 'gab'
-    mob_name = L
-  [../]
-  [./volume_conserver_a]
+  [./mua_kernel]
     type = MaterialValueKernel
-    variable = etaa
-    Mat_name = stab_func_a
+    variable = mua
+    Mat_name = func_a
   [../]
   # ===========================================================ORDER_PARAMETER_B
   [./etab_dot]
@@ -108,11 +108,6 @@
     gamma_names = 'gab'
     mob_name = L
   [../]
-  [./volume_conserver_b]
-    type = MaterialValueKernel
-    variable = etab
-    Mat_name = stab_func_b
-  [../]
 []
 
 [Materials]
@@ -127,13 +122,13 @@
     type = DerivativeParsedMaterial
     args = etaa
     f_name = ha
-    function = etaa
+    function = etaa*etaa
   [../]
   [./hb]
     type = DerivativeParsedMaterial
     args = etab
     f_name = hb
-    function = etab
+    function = etab*etab
   [../]
   # ============================================================Bulk free energy
   [./f_bulk]
@@ -149,18 +144,15 @@
     type = DerivativeParsedMaterial
     f_name = psi
     args = 'etaa etab'
-    material_property_names = 'dha_a:=D[ha(etaa,etab),etaa] dha_b:=D[ha(etaa,etab),etab]'
-    function = 'dha_a*dha_a + dha_b*dha_b'
+    material_property_names = 'dha_a:=D[ha(etaa),etaa]'
+    function = 'dha_a*dha_a'
   [../]
   [./chi]
     type = DerivativeParsedMaterial
     f_name = chi
-    args = 'etaa etab'
-    material_property_names = 'dha_a:=D[ha(etaa,etab),etaa]
-                               dha_b:=D[ha(etaa,etab),etab]
-                               mu_loc_a:=D[f_bulk(etaa,etab),etaa]
-                               mu_loc_b:=D[f_bulk(etaa,etab),etab]'
-    function = 'dha_a*mu_loc_a + dha_b*mu_loc_b'
+    args = 'etaa mua'
+    material_property_names = 'dha_a:=D[ha(etaa),etaa]'
+    function = 'dha_a*mua'
   [../]
   [./Lagrange_multiplier]
     type = DerivativeParsedMaterial
@@ -170,15 +162,10 @@
   [../]
   [./stabilization_term_a]
     type = DerivativeParsedMaterial
+    args = 'etaa mua'
     material_property_names = 'L_mult L dha_a:=D[ha(etaa,etab),etaa]'
-    function = '-L*L_mult*dha_a'
-    f_name = stab_func_a
-  [../]
-  [./stabilization_term_b]
-    type = DerivativeParsedMaterial
-    material_property_names = 'L_mult L dha_b:=D[ha(etaa,etab),etab]'
-    function = '-L*L_mult*dha_b'
-    f_name = stab_func_b
+    function = 'L*(mua - L_mult*dha_a)'
+    f_name = func_a
   [../]
 []
 
@@ -295,7 +282,7 @@
 [Outputs]
   [./exodus]
     type = Exodus
-    interval = 5
+    interval = 10
   [../]
   [./csv]
     type = CSV

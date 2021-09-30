@@ -66,8 +66,6 @@
   [../]
   [./mua]
   [../]
-  [./mub]
-  [../]
 []
 
 [Kernels]
@@ -271,13 +269,13 @@
 [Executioner]
   type = Transient
   solve_type = PJFNK
-  scheme = implicit-euler
+  scheme = bdf2
   end_time = 1e8
-  l_max_its = 15#30
-  nl_max_its = 15#50
-  nl_rel_tol = 1e-5 #1e-8
-  nl_abs_tol = 1e-6 #1e-11 -9 or 10 for equilibrium
-  l_tol = 1e-4 # or 1e-4
+  l_max_its = 50#30
+  nl_max_its = 30#50
+  nl_rel_tol = 1e-6 #1e-8
+  nl_abs_tol = 1e-7 #1e-11 -9 or 10 for equilibrium
+  l_tol = 1e-5 # or 1e-4
   # Time Stepper: Using Iteration Adaptative here. 5 nl iterations (+-1), and l/nl iteration ratio of 100
   # maximum of 5% increase per time step
   [./TimeStepper]
