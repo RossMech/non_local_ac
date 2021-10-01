@@ -123,7 +123,6 @@
     args = etaa
     f_name = ha
     function = '3*etaa*etaa - 2*etaa*etaa*etaa'
-    #function = etaa*etaa
   [../]
   # ============================================================Bulk free energy
   [./f_bulk]
