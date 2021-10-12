@@ -1,27 +1,19 @@
-# Simulation of initial square phase transforming into circle and shrinking
-# due to curved interface
-
 [Mesh]
-  type = GeneratedMesh
-  dim = 2
-  nx = 13
-  ny = 13
-  xmin = 0
-  xmax = 50
-  ymin = 0
-  ymax = 50
+	type = FileMesh
+	dim = 2
+	file = square_heterogeneous_a_025.msh
 []
 
 [Adaptivity]
-	max_h_level = 3
+	max_h_level = 4
 	marker = marker
 	initial_marker = box_marker
-	initial_steps = 3
+	initial_steps = 4
 	[./Markers]
 		[./box_marker]
 			type = BoxMarker
-			bottom_left = '0 0 0'
-			top_right = '28 28 0'
+			bottom_left = '-19 -19 0'
+			top_right = '19 19 0'
 			inside = refine
 			outside = do_nothing
 		[../]
@@ -35,34 +27,53 @@
 	[../]
 []
 
+[GlobalParams]
+	derivative_order = 3
+[]
+
 [Variables]
+  # Order variables
   [./etaa]
     family = LAGRANGE
     order = FIRST
     [./InitialCondition]
-      type = BoundingBoxIC
-      x1 = -25
-      x2 = 25
-      y1 = -25
-      y2 = 25
-      inside = 1.0
-      outside = 0.0
-      int_width = 2.5
+			type = SmoothCircleFromFileIC
+	    file_name = 'single_phase_verification_etaa.txt'
+	    invalue = 1.0
+	    outvalue = 0.0
+	    int_width = 0.3
     [../]
   [../]
   [./etab]
     family = LAGRANGE
     order = FIRST
-    [./InitialCondition]
-      type = BoundingBoxIC
-      x1 = -25
-      x2 = 25
-      y1 = -25
-      y2 = 25
-      inside = 0.0
-      outside = 1.0
-      int_width = 2.5
+		[./InitialCondition]
+			type = SmoothCircleFromFileIC
+	    file_name = 'single_phase_verification_etaa.txt'
+	    invalue = 0.0
+	    outvalue = 1.0
+	    int_width = 0.3
     [../]
+  [../]
+  # Displacements
+  [./disp_x]
+  [../]
+  [./disp_y]
+  [../]
+[]
+
+[BCs]
+  [./disp_y]
+    type = DirichletBC
+    variable = disp_y
+    boundary = 1
+    value = 0
+  [../]
+  [./disp_x]
+    type = DirichletBC
+    variable = disp_x
+    boundary = 1
+    value = 0
   [../]
 []
 
@@ -81,14 +92,21 @@
   [./etaa_bulk]
     type = ACGrGrMulti
     variable = etaa
-    v =           'etab'
+    v = 'etab'
     gamma_names = 'gab'
     mob_name = L
   [../]
-  [./volume_conserver_a]
+  [./etaa_elastic]
+    type = AllenCahn
+    variable = etaa
+    f_name = f_elast
+    mob_name = L
+    args = 'etab'
+  [../]
+  [./volume_conservera]
     type = MaterialValueKernel
     variable = etaa
-    Mat_name = stab_func_a
+    Mat_name = func_a
   [../]
   # ===========================================================ORDER_PARAMETER_B
   [./etab_dot]
@@ -108,21 +126,44 @@
     gamma_names = 'gab'
     mob_name = L
   [../]
+  [./etab_elastic]
+    type = AllenCahn
+    variable = etab
+    f_name = f_elast
+    mob_name = L
+    args = 'etaa'
+  [../]
+  #==============================================================TensorMechanics
+  [./TensorMechanics]
+    displacements = 'disp_x disp_y'
+  [../]
 []
 
 [Materials]
   # ===================================================================Constants
   [./const]
     type = GenericConstantMaterial
-    prop_names =  'L    gab kappa mu'
-    prop_values = '1.0  1.5 1.875 2.4'
+    prop_names =  'L   gab  kappa   mu'
+    prop_values = '1.0 1.5   0.09  8.0'
   [../]
   # =========================================================Switching Functions
+  [./wa]
+    type = DerivativeParsedMaterial
+    args = etaa
+    f_name = wa
+    function = '3*etaa*etaa - 2*etaa*etaa*etaa'
+  [../]
   [./ha]
-    type = SwitchingFunctionMaterial
-    eta = etaa
-    function_name = ha
-    h_order = SIMPLE
+    type = SwitchingFunctionMultiPhaseMaterial
+    h_name = ha
+    all_etas = 'etab etaa'
+    phase_etas = 'etaa'
+  [../]
+  [./hb]
+    type = SwitchingFunctionMultiPhaseMaterial
+    h_name = hb
+    all_etas = 'etaa etab'
+    phase_etas = 'etab'
   [../]
   # ============================================================Bulk free energy
   [./f_bulk]
@@ -138,15 +179,15 @@
     type = DerivativeParsedMaterial
     f_name = psi
     args = 'etaa etab'
-    material_property_names = 'dha_a:=D[ha(etaa,etab),etaa]'
-    function = 'dha_a'
+    material_property_names = 'dwa_a:=D[wa(etaa),etaa]'
+    function = 'dwa_a'
   [../]
   [./chi]
     type = DerivativeParsedMaterial
     f_name = chi
-    args = 'etaa etab'
-    material_property_names = 'mu_loc_a:=D[f_bulk(etaa,etab),etaa]'
-    function = 'mu_loc_a'
+    args = 'etaa'
+    material_property_names = 'mu_a:=D[f_total(etaa,etab),etaa]'
+    function = 'mu_a'
   [../]
   [./Lagrange_multiplier]
     type = DerivativeParsedMaterial
@@ -156,9 +197,57 @@
   [../]
   [./stabilization_term_a]
     type = DerivativeParsedMaterial
-    material_property_names = 'L_mult L dha_a:=D[ha(etaa,etab),etaa]'
-    function = '-L*L_mult*dha_a'
-    f_name = stab_func_a
+    args = 'etaa'
+    material_property_names = 'L_mult L dwa_a:=D[wa(etaa,etab),etaa]'
+    function = '-L*L_mult*dwa_a'
+    f_name = func_a
+  [../]
+  #===================================================================Elasticity
+  [./elasticity_tensor_matrix]
+    type = ComputeElasticityTensor
+    C_ijkl = '145.8518 110.6975 110.6975 145.8518 110.6975 145.8518 104.6428 104.6428 104.6428'
+    fill_method = symmetric9
+    base_name = stiffness_matrix
+  [../]
+  [./elasticity_tensor_precipitate]
+		type = ComputeElasticityTensor
+		C_ijkl = '151.3125 107.1896 108.7447 -1.9095 -5.7284 -13.0552 189.5016 70.5556 5.7284 1.9095 6.0394 187.9465 -3.8189 3.8189 7.0158 19.53 7.0158 1.9095 57.7191 -1.9095 56.1640'
+		fill_method = symmetric21
+		base_name = stiffness_precipitate
+	[../]
+  [./effective_elastic_tensor]
+		type = CompositeElasticityTensor
+		args = 'etaa etab'
+		tensors = 'stiffness_precipitate stiffness_matrix'
+		weights = 'ha                    hb'
+	[../]
+  [./eigenstrain]
+    type = ComputeVariableEigenstrain
+    eigen_base = '0.2417 -0.1213 -0.1107 0.0053 0.0183 -0.029'
+		prefactor = ha
+    args = 'etaa etab'
+    eigenstrain_name = eigenstrain
+  [../]
+  [./strain]
+    type = ComputeSmallStrain
+    displacements = 'disp_x disp_y'
+    eigenstrain_names = eigenstrain
+  [../]
+  [./stress]
+    type = ComputeLinearElasticStress
+  [../]
+  [./elastic_free_energy]
+    type = ElasticEnergyMaterial
+    f_name = f_elast
+    args = 'etaa etab'
+    derivative_order = 3
+  [../]
+  #============================================================Total Free Energy
+  [./total_free_energy]
+    type = DerivativeSumMaterial
+    f_name = f_total
+    args = 'etaa etab'
+    sum_materials = 'f_elast f_bulk'
   [../]
 []
 
@@ -167,7 +256,7 @@
     order = CONSTANT
     family = MONOMIAL
   [../]
-  [./ha_auxvar]
+  [./wa_auxvar]
     order = CONSTANT
     family = MONOMIAL
   [../]
@@ -185,14 +274,14 @@
   [./f_dens]
     type = TotalFreeEnergy
     variable = f_dens
-    f_name = f_bulk
+    f_name = f_total
     interfacial_vars = 'etaa etab'
     kappa_names = 'kappa kappa'
   [../]
-  [./ha_auxkernel]
+  [./wa_auxkernel]
     type = MaterialRealAux
-    property = ha
-    variable = ha_auxvar
+    property = wa
+    variable = wa_auxvar
   [../]
   [./psi_auxkernel]
     type = MaterialRealAux
@@ -217,7 +306,7 @@
   [../]
   [./etaa_vol]
     type = ElementIntegralVariablePostprocessor
-    variable = etaa
+    variable = wa_auxvar
   [../]
   [./memory]
     type = MemoryUsage
@@ -252,13 +341,15 @@
 [Executioner]
   type = Transient
   solve_type = PJFNK
-  scheme = implicit-euler
+  scheme = bdf2
   end_time = 1e8
-  l_max_its = 15#30
-  nl_max_its = 15#50
-  nl_rel_tol = 1e-8 #1e-8
-  nl_abs_tol = 1e-9 #1e-11 -9 or 10 for equilibrium
+  l_max_its = 20#30
+  nl_max_its = 50#50
+  nl_rel_tol = 1e-4 #1e-8
+  nl_abs_tol = 1e-5 #1e-11 -9 or 10 for equilibrium
   l_tol = 1e-4 # or 1e-4
+  petsc_options_iname = '-pc_type  -pc_factor_mat_solver_package'
+  petsc_options_value = 'lu mumps'
   # Time Stepper: Using Iteration Adaptative here. 5 nl iterations (+-1), and l/nl iteration ratio of 100
   # maximum of 5% increase per time step
   [./TimeStepper]
@@ -266,8 +357,8 @@
     optimal_iterations = 8
     linear_iteration_ratio = 100
     iteration_window = 1
-    growth_factor = 1.01
-    dt=1
+    growth_factor = 1.1
+    dt=1e-5
     cutback_factor = 0.5
   [../]
 []
@@ -275,8 +366,9 @@
 [Outputs]
   [./exodus]
     type = Exodus
-    interval = 5
+    interval = 10
   [../]
+  exodus = true
   [./csv]
     type = CSV
   [../]

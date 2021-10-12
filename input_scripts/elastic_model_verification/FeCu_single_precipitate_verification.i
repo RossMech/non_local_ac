@@ -1,40 +1,43 @@
 [Mesh]
-  type = GeneratedMesh
-  dim = 2
-  #nx = 75
-  #ny = 75
-  nx = 120
-  ny = 120
-  xmin = 0
-  #xmax = 200
-  xmax = 40
-  ymin = 0
-  ymax = 40
-  #ymax = 200
+	type = FileMesh
+	dim = 2
+	file = square_heterogeneous.msh
 []
 
-#[Adaptivity]
-#	max_h_level = 3
-#	marker = marker
-#	initial_marker = box_marker
-#	initial_steps = 3
-#	[./Markers]
-#		[./box_marker]
-#			type = BoxMarker
-#			bottom_left = '0 0 0'
-#			top_right = '25 25 0'
-#			inside = refine
-#			outside = do_nothing
-#		[../]
-#		[./marker]
-#			type = ValueRangeMarker
-#			lower_bound = 0.01
-#			upper_bound = 0.99
-#			variable = etaa
-#			third_state = DO_NOTHING
-#		[../]
-#	[../]
-#[]
+[Adaptivity]
+	max_h_level = 4
+	marker = marker
+	initial_marker = box_marker
+	initial_steps = 4
+	[./Markers]
+		[./box_marker]
+			type = BoxMarker
+			bottom_left = '-7 -7 0'
+			top_right = '7 7 0'
+			inside = refine
+			outside = do_nothing
+		[../]
+		[./marker]
+			type = ValueRangeMarker
+			lower_bound = 0.01
+			upper_bound = 0.99
+			variable = etaa
+			third_state = DO_NOTHING
+		[../]
+		[./inverted_marker]
+			type = ValueRangeMarker
+			invert = true
+			lower_bound = 0.01
+			upper_bound = 0.99
+			variable = etaa
+			third_state = DO_NOTHING
+		[../]
+	[../]
+[]
+
+[GlobalParams]
+	derivative_order = 3
+[]
 
 [Variables]
   # Order variables
@@ -45,10 +48,10 @@
       type = SmoothCircleIC
       x1 = 0.0
       y1 = 0.0
-      radius = 20
+      radius = 6
       invalue = 1.0
       outvalue = 0.0
-      int_width = 4
+      int_width = 0.3
     [../]
   [../]
   [./etab]
@@ -58,14 +61,11 @@
       type = SmoothCircleIC
       x1 = 0.0
       y1 = 0.0
-      radius = 20
+      radius = 6
       invalue = 0.0
       outvalue = 1.0
-      int_width = 4
+      int_width = 0.3
     [../]
-  [../]
-  # Structural variable potentials
-  [./mua]
   [../]
   # Displacements
   [./disp_x]
@@ -74,41 +74,50 @@
   [../]
 []
 
-
 [BCs]
-  [./left_x]
-    type = DirichletBC
-    variable = disp_x
-    value = 0.0
-    boundary = left
-  [../]
-  [./bottom_y]
+  [./disp_y]
     type = DirichletBC
     variable = disp_y
-    value = 0.0
-    boundary = bottom
+    boundary = 1
+    value = 0
+  [../]
+  [./disp_x]
+    type = DirichletBC
+    variable = disp_x
+    boundary = 1
+    value = 0
   [../]
 []
 
 [Kernels]
   # ===========================================================ORDER_PARAMETER_A
-  [./etaa_eq]
-    type = SplitCHParsed
-    variable = etaa
-    #f_name = f_total
-    f_name = f_bulk
-    kappa_name = kappa
-    w = mua
-  [../]
-  #=======================================================STRUCTURAL_POTENTIAL_A
   [./etaa_dot]
-    type = CoupledTimeDerivative
-    variable = mua
-    v = etaa
+    type = TimeDerivative
+    variable = etaa
   [../]
-  [./mua_kernel]
+  [./etaa_interface]
+    type = ACInterface
+    variable = etaa
+    mob_name = L
+    kappa_name = 'kappa'
+  [../]
+  [./etaa_bulk]
+    type = ACGrGrMulti
+    variable = etaa
+    v = 'etab'
+    gamma_names = 'gab'
+    mob_name = L
+  [../]
+  [./etaa_elastic]
+    type = AllenCahn
+    variable = etaa
+    f_name = f_elast
+    mob_name = L
+    args = 'etab'
+  [../]
+  [./volume_conservera]
     type = MaterialValueKernel
-    variable = mua
+    variable = etaa
     Mat_name = func_a
   [../]
   # ===========================================================ORDER_PARAMETER_B
@@ -129,12 +138,13 @@
     gamma_names = 'gab'
     mob_name = L
   [../]
-  #[./etab_elastic]
-  #  type = AllenCahn
-  #  variable = etab
-  #  f_name = f_elast
-  #  mob_name = L
-  #[../]
+  [./etab_elastic]
+    type = AllenCahn
+    variable = etab
+    f_name = f_elast
+    mob_name = L
+    args = 'etaa'
+  [../]
   #==============================================================TensorMechanics
   [./TensorMechanics]
     displacements = 'disp_x disp_y'
@@ -145,8 +155,8 @@
   # ===================================================================Constants
   [./const]
     type = GenericConstantMaterial
-    prop_names =  'L    gab kappa mu  misfit'
-    prop_values = '1.0  1.5 37.5 300 0.01'
+    prop_names =  'L   gab  kappa   mu'
+    prop_values = '1.0 1.5   0.09  8.0'
   [../]
   # =========================================================Switching Functions
   [./wa]
@@ -160,6 +170,12 @@
     h_name = ha
     all_etas = 'etab etaa'
     phase_etas = 'etaa'
+  [../]
+  [./hb]
+    type = SwitchingFunctionMultiPhaseMaterial
+    h_name = hb
+    all_etas = 'etaa etab'
+    phase_etas = 'etab'
   [../]
   # ============================================================Bulk free energy
   [./f_bulk]
@@ -176,14 +192,14 @@
     f_name = psi
     args = 'etaa etab'
     material_property_names = 'dwa_a:=D[wa(etaa),etaa]'
-    function = 'dwa_a*dwa_a'
+    function = 'dwa_a'
   [../]
   [./chi]
     type = DerivativeParsedMaterial
     f_name = chi
-    args = 'etaa mua'
-    material_property_names = 'dwa_a:=D[wa(etaa),etaa]'
-    function = 'dwa_a*mua'
+    args = 'etaa'
+    material_property_names = 'mu_a:=D[f_total(etaa,etab),etaa]'
+    function = 'mu_a'
   [../]
   [./Lagrange_multiplier]
     type = DerivativeParsedMaterial
@@ -193,28 +209,34 @@
   [../]
   [./stabilization_term_a]
     type = DerivativeParsedMaterial
-    args = 'etaa mua'
+    args = 'etaa'
     material_property_names = 'L_mult L dwa_a:=D[wa(etaa,etab),etaa]'
-    function = 'L*(mua - L_mult*dwa_a)'
+    function = '-L*L_mult*dwa_a'
     f_name = func_a
   [../]
   #===================================================================Elasticity
-  [./elasticity_tensor]
+  [./elasticity_tensor_matrix]
     type = ComputeElasticityTensor
-    C_ijkl = '250 170 170 250 170 250 100 100 100'
+    C_ijkl = '145.8518 110.6975 110.6975 145.8518 110.6975 145.8518 104.6428 104.6428 104.6428'
     fill_method = symmetric9
+    base_name = stiffness_matrix
   [../]
-  [./prefactor]
-    type = DerivativeParsedMaterial
-    args = 'etaa etab'
-    material_property_names = 'ha(etaa,etab) misfit'
-    function = 'ha*misfit'
-    f_name = prefactor
-  [../]
+  [./elasticity_tensor_precipitate]
+		type = ComputeElasticityTensor
+		C_ijkl = '151.3125 107.1896 108.7447 -1.9095 -5.7284 -13.0552 189.5016 70.5556 5.7284 1.9095 6.0394 187.9465 -3.8189 3.8189 7.0158 19.53 7.0158 1.9095 57.7191 -1.9095 56.1640'
+		fill_method = symmetric21
+		base_name = stiffness_precipitate
+	[../]
+  [./effective_elastic_tensor]
+		type = CompositeElasticityTensor
+		args = 'etaa etab'
+		tensors = 'stiffness_precipitate stiffness_matrix'
+		weights = 'ha                    hb'
+	[../]
   [./eigenstrain]
     type = ComputeVariableEigenstrain
-    eigen_base = '1.0 1.0 0.0 0.0 0.0 0.0'
-    prefactor = prefactor
+    eigen_base = '0.2417 -0.1213 -0.1107 0.0053 0.0183 -0.029'
+		prefactor = ha
     args = 'etaa etab'
     eigenstrain_name = eigenstrain
   [../]
@@ -230,7 +252,9 @@
     type = ElasticEnergyMaterial
     f_name = f_elast
     args = 'etaa etab'
+    derivative_order = 3
   [../]
+  #============================================================Total Free Energy
   [./total_free_energy]
     type = DerivativeSumMaterial
     f_name = f_total
@@ -336,6 +360,8 @@
   nl_rel_tol = 1e-4 #1e-8
   nl_abs_tol = 1e-5 #1e-11 -9 or 10 for equilibrium
   l_tol = 1e-4 # or 1e-4
+  petsc_options_iname = '-pc_type  -pc_factor_mat_solver_package'
+  petsc_options_value = 'lu mumps'
   # Time Stepper: Using Iteration Adaptative here. 5 nl iterations (+-1), and l/nl iteration ratio of 100
   # maximum of 5% increase per time step
   [./TimeStepper]
