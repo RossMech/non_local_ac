@@ -8,7 +8,7 @@ VolumeConservationKernel::validParams()
   auto params = KernelValue::validParams();
   params.addClassDescription("The kernel, which implements the volume conservation for non-local Allen-Cahn model");
   params.addRequiredParam<MaterialPropertyName>(
-                              "L", "Structural mobility");
+                              "mob_name", "Structural mobility");
   params.addRequiredParam<MaterialPropertyName>(
                               "lagrange_mult", "Lagrange multiplicator");
   params.addRequiredParam<MaterialPropertyName>(
@@ -18,7 +18,7 @@ VolumeConservationKernel::validParams()
 
 VolumeConservationKernel::VolumeConservationKernel(const InputParameters & parameters)
       : KernelValue(parameters),
-        _L(getMaterialProperty<Real>("L")),
+        _L(getMaterialProperty<Real>("mob_name")),
         _langrange_mult(getMaterialProperty<Real>("lagrange_mult")),
         _w(getMaterialProperty<Real>("weight_func"))
       {}
