@@ -1,32 +1,18 @@
+# note: check elastic energy at start of the transformation
 [Mesh]
 	type = FileMesh
 	dim = 2
-	file = square_heterogeneous.msh
+	file = square_heterogeneous_r_8.msh
 []
 
 [Adaptivity]
 	max_h_level = 4
 	marker = marker
-	initial_marker = box_marker
+	initial_marker = marker
 	initial_steps = 4
 	[./Markers]
-		[./box_marker]
-			type = ValueRangeMarker
-			lower_bound = 0.01
-			upper_bound = 0.99
-			variable = etaa
-			third_state = DO_NOTHING
-		[../]
 		[./marker]
 			type = ValueRangeMarker
-			lower_bound = 0.01
-			upper_bound = 0.99
-			variable = etaa
-			third_state = DO_NOTHING
-		[../]
-		[./inverted_marker]
-			type = ValueRangeMarker
-			invert = true
 			lower_bound = 0.01
 			upper_bound = 0.99
 			variable = etaa
@@ -37,6 +23,7 @@
 
 [GlobalParams]
 	derivative_order = 3
+	use_displaced = false
 []
 
 [Variables]
@@ -45,28 +32,26 @@
     family = LAGRANGE
     order = FIRST
     [./InitialCondition]
-      type = SmoothCircleIC
-      x1 = 0.0
-      y1 = 0.0
-      radius = 6
-      invalue = 1.0
-      outvalue = 0.0
-      int_width = 0.3
+      type = InclinedBoxIC
+			inside = 1.0
+			outside = 0.0
+			a = 25.68
+			b = 2.49
+			theta = 38.5
     [../]
   [../]
-  [./etab]
-    family = LAGRANGE
-    order = FIRST
-    [./InitialCondition]
-      type = SmoothCircleIC
-      x1 = 0.0
-      y1 = 0.0
-      radius = 6
-      invalue = 0.0
-      outvalue = 1.0
-      int_width = 0.3
+	[./etab]
+		family = LAGRANGE
+		order = FIRST
+		[./InitialCondition]
+      type = InclinedBoxIC
+			inside = 0.0
+			outside = 1.0
+			a = 25.68
+			b = 2.49
+			theta = 38.5
     [../]
-  [../]
+	[../]
   # Displacements
   [./disp_x]
   [../]
@@ -90,7 +75,7 @@
 []
 
 [Kernels]
-  # ===========================================================ORDER_PARAMETER_A
+	# ===========================================================ORDER_PARAMETER_A
   [./etaa_dot]
     type = TimeDerivative
     variable = etaa
@@ -158,7 +143,7 @@
   [./const]
     type = GenericConstantMaterial
     prop_names =  'L   gab  kappa   mu'
-    prop_values = '1.0 1.5   0.09  8.0'
+    prop_values = '1.0 1.5  0.08    9.0'
   [../]
   # =========================================================Switching Functions
   [./wa]
@@ -366,8 +351,8 @@
   end_time = 1e8
   l_max_its = 20#30
   nl_max_its = 50#50
-  nl_rel_tol = 1e-8 #1e-8
-  nl_abs_tol = 1e-9 #1e-11 -9 or 10 for equilibrium
+	nl_rel_tol = 1e-7 #1e-8
+  nl_abs_tol = 1e-8 #1e-11 -9 or 10 for equilibrium
   l_tol = 1e-4 # or 1e-4
   petsc_options_iname = '-pc_type  -pc_factor_mat_solver_package'
   petsc_options_value = 'lu mumps'

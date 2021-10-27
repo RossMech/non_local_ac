@@ -245,5 +245,11 @@ conf_vars.mk
 *.prof
 *.heap
 
-# Ignore mesh files
+# Mesh files
 *.msh
+
+# Result folder
+results/**
+
+# Partitioned meshes
+*_out_cp/**
