@@ -28,31 +28,29 @@
 
 [Variables]
   # Order variables
-  [./etaa]
-    family = LAGRANGE
-    order = FIRST
-    [./InitialCondition]
-      type = SmoothCircleIC
-      x1 = 0.0
-      y1 = 0.0
-      radius = 17.0
-      invalue = 1.0
-      outvalue = 0.0
-      int_width = 0.3
-    [../]
-  [../]
+	[./etaa]
+		family = LAGRANGE
+		order = FIRST
+		[./InitialCondition]
+			type = InclinedBoxIC
+			inside = 1.0
+			outside = 0.0
+			a = 76.18
+			b = 3.79
+			theta = 38.5
+		[../]
+	[../]
 	[./etab]
 		family = LAGRANGE
 		order = FIRST
 		[./InitialCondition]
-			type = SmoothCircleIC
-			x1 = 0.0
-      y1 = 0.0
-      radius = 17.0
-      invalue = 0.0
-      outvalue = 1.0
-      int_width = 0.3
-    [../]
+			type = InclinedBoxIC
+			inside = 0.0
+			outside = 1.0
+			a = 76.18
+			b = 3.79
+			theta = 38.5
+		[../]
 	[../]
   # Displacements
   [./disp_x]

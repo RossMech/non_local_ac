@@ -28,31 +28,29 @@
 
 [Variables]
   # Order variables
-  [./etaa]
-    family = LAGRANGE
-    order = FIRST
-    [./InitialCondition]
-      type = SmoothCircleIC
-      x1 = 0.0
-      y1 = 0.0
-      radius = 29.0
-      invalue = 1.0
-      outvalue = 0.0
-      int_width = 0.3
-    [../]
-  [../]
+	[./etaa]
+		family = LAGRANGE
+		order = FIRST
+		[./InitialCondition]
+			type = InclinedBoxIC
+			inside = 1.0
+			outside = 0.0
+			a = 167.07
+			b = 5.03
+			theta = 38.6
+		[../]
+	[../]
 	[./etab]
 		family = LAGRANGE
 		order = FIRST
 		[./InitialCondition]
-			type = SmoothCircleIC
-			x1 = 0.0
-      y1 = 0.0
-      radius = 29.0
-      invalue = 0.0
-      outvalue = 1.0
-      int_width = 0.3
-    [../]
+			type = InclinedBoxIC
+			inside = 0.0
+			outside = 1.0
+			a = 167.07
+			b = 5.03
+			theta = 38.6
+		[../]
 	[../]
   # Displacements
   [./disp_x]
@@ -60,7 +58,6 @@
   [./disp_y]
   [../]
 []
-
 [BCs]
   [./disp_y]
     type = DirichletBC
@@ -145,7 +142,7 @@
   [./const]
     type = GenericConstantMaterial
     prop_names =  'L   gab  kappa   mu'
-    prop_values = '1.0 1.5  0.29    2.4828'
+    prop_values = '1.0 1.5  0.1450    4.9656'
   [../]
   # =========================================================Switching Functions
   [./wa]
