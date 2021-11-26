@@ -1,9 +1,8 @@
 # note: check elastic energy at start of the transformation
 [Mesh]
 	type = FileMesh
-	dim = 2
+	dim = 3
 	file = cube_heterogeneous.msh
-	parallel_type = DISTRIBUTED
 []
 
 [Adaptivity]
@@ -40,7 +39,6 @@
       invalue = 1.0
       outvalue = 0.0
       int_width = 0.3
-			3D_spheres = true
     [../]
   [../]
 	[./etab]
@@ -54,8 +52,35 @@
       invalue = 0.0
       outvalue = 1.0
       int_width = 0.3
-			3D_spheres = true
     [../]
+	[../]
+  # Displacements
+  [./disp_x]
+  [../]
+  [./disp_y]
+  [../]
+	[./disp_z]
+	[../]
+[]
+
+[BCs]
+  [./disp_y]
+    type = DirichletBC
+    variable = disp_y
+    boundary = 1
+    value = 0
+  [../]
+  [./disp_x]
+    type = DirichletBC
+    variable = disp_x
+    boundary = 1
+    value = 0
+  [../]
+	[./disp_z]
+		type = DirichletBC
+		variable = disp_z
+		boundary = 1
+		value = 0
 	[../]
 []
 
@@ -312,11 +337,14 @@
     variable = chi_auxvar
     execute_on = 'INITIAL LINEAR NONLINEAR TIMESTEP_BEGIN TIMESTEP_END'
   [../]
+	[./non_linear_it]
+		type = NumNonlinearIterations
+	[../]
 []
 
 #preconditioning for the coupled variables.
 [Preconditioning]
-  [./coupling]
+	[./coupling]
     type = SMP
 
 		#full = true
@@ -326,8 +354,8 @@
 
 		#petsc_options_iname = '-pc_type  -pc_factor_mat_solver_package'
 	  #petsc_options_value = 'lu mumps'
-		petsc_options_iname = '-pc_type -pc_hypre_type -ksp_type -pc_hypre_boomeramg_strong_threshold'
-		petsc_options_value = 'hypre boomeramg bcgs 0.7'
+		petsc_options_iname = '-pc_type -pc_hypre_type -ksp_type -ksp_gmres_restart -pc_hypre_boomeramg_strong_threshold'
+		petsc_options_value = 'hypre boomeramg gmres 31 0.7'
 
 		solve_type = PJFNK
 
@@ -346,33 +374,33 @@
 [Executioner]
   type = Transient
   solve_type = PJFNK
-  scheme = implicit-euler
-  end_time = 1e8
-  l_max_its = 20#30
+  scheme = bdf2
+  #end_time = 1e8
+	num_steps = 1
+	l_max_its = 100#30
   nl_max_its = 50#50
 	nl_rel_tol = 1e-7 #1e-8
   nl_abs_tol = 1e-8 #1e-11 -9 or 10 for equilibrium
   l_tol = 1e-4 # or 1e-4
-	petsc_options_iname = '-pc_type -pc_hypre_type -ksp_type -pc_hypre_boomeramg_strong_threshold'
-	petsc_options_value = 'hypre boomeramg bcgs 0.7'
+	petsc_options_iname = '-pc_type -pc_hypre_type -ksp_type -ksp_gmres_restart -pc_hypre_boomeramg_strong_threshold'
+	petsc_options_value = 'hypre boomeramg gmres 31 0.7'
   # Time Stepper: Using Iteration Adaptative here. 5 nl iterations (+-1), and l/nl iteration ratio of 100
   # maximum of 5% increase per time step
   [./TimeStepper]
     type = IterationAdaptiveDT
-    optimal_iterations = 5
+    optimal_iterations = 10
     linear_iteration_ratio = 100
     iteration_window = 1
     growth_factor = 1.1
-    dt=1e-8
+    dt=2e-3
     cutback_factor = 0.5
   [../]
 []
 
-
 [Outputs]
   [./exodus]
     type = Exodus
-    interval = 10
+    #interval = 10
   [../]
   exodus = true
   [./csv]

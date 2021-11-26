@@ -346,7 +346,7 @@
 		#petsc_options_iname = '-pc_type  -pc_factor_mat_solver_package'
 	  #petsc_options_value = 'lu mumps'
 		petsc_options_iname = '-pc_type -pc_hypre_type -ksp_type'
-		petsc_options_value = 'hypre boomeramg bcgs'
+		petsc_options_value = 'hypre boomeramg gmres'
 
 		solve_type = PJFNK
 
@@ -365,7 +365,7 @@
 [Executioner]
   type = Transient
   solve_type = PJFNK
-  scheme = implicit-euler
+  scheme = bdf2
   end_time = 1e8
   l_max_its = 20#30
   nl_max_its = 50#50
@@ -373,7 +373,7 @@
   nl_abs_tol = 1e-7 #1e-11 -9 or 10 for equilibrium
   l_tol = 1e-4 # or 1e-4
 	petsc_options_iname = '-pc_type -pc_hypre_type -ksp_type'
-	petsc_options_value = 'hypre boomeramg bcgs'
+	petsc_options_value = 'hypre boomeramg gmres'
   # Time Stepper: Using Iteration Adaptative here. 5 nl iterations (+-1), and l/nl iteration ratio of 100
   # maximum of 5% increase per time step
   [./TimeStepper]
