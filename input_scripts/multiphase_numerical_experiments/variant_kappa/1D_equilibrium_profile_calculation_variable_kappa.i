@@ -64,6 +64,13 @@
     mob_name = L
     kappa_name = 'kappa'
   [../]
+	[./etaa_interface2]
+		type = ACInterfaceMultiDerivative
+		variable = etaa
+		mob_name = L
+		kappa_name = kappa
+		v = 'etab'
+	[../]
   [./etaa_bulk]
     type = ACGrGrMulti
     variable = etaa
@@ -82,6 +89,13 @@
     mob_name = L
     kappa_name = 'kappa'
   [../]
+	[./etab_interface2]
+		type = ACInterfaceMultiDerivative
+		variable = etab
+		mob_name = L
+		kappa_name = kappa
+		v = 'etaa'
+	[../]
   [./etab_bulk]
     type = ACGrGrMulti
     variable = etab
@@ -100,11 +114,48 @@
 
 [Materials]
   # ===================================================================Constants
-  [./const]
+	[./const]
     type = GenericConstantMaterial
-    prop_names =  'L    gab     kappa     mu'
-    prop_values = '1.0  0.53    0.0112    68.66'
+    prop_names =  'L    gab     kappa_ab  mu'
+    prop_values = '1.0  2.4363  0.0896    6'
   [../]
+	[./denom]
+		type = DerivativeParsedMaterial
+		f_name = denom
+		args = 'etaa etab'
+		function = 'etaa*etaa*etab*etab'
+	[../]
+	[./denom_mod]
+		type = DerivativeParsedMaterial
+		f_name = denom_mod
+		args = 'etaa etab'
+		material_property_names = 'denom'
+		function = 'if(denom > 1e-7,denom,1/3.33e3)'
+	[../]
+	[./kappa_1]
+		type = DerivativeParsedMaterial
+		f_name = kappa_1
+		args = 'etaa etab'
+		material_property_names = 'kappa_ab denom_mod'
+		function = '(kappa_ab*etaa*etaa*etab*etab) / denom_mod'
+		outputs = exodus
+	[../]
+	[./kappa_2]
+		type = DerivativeParsedMaterial
+		f_name = kappa_2
+		args = 'etaa etab'
+		material_property_names = 'kappa_1 kappa_ab'
+		function = 'if(kappa_1 > kappa_ab,kappa_ab,kappa_1)'
+		outputs = exodus
+	[../]
+	[./kappa]
+		type = DerivativeParsedMaterial
+		f_name = kappa
+		args = 'etaa etab'
+		material_property_names = 'kappa_2 kappa_ab'
+		function = 'if(kappa_2 < kappa_ab,kappa_ab,kappa_2)'
+		outputs = exodus
+	[../]
   # ============================================================Bulk free energy
   [./f_bulk]
     type = DerivativeParsedMaterial
@@ -152,7 +203,7 @@
 
   [./TimeStepper]
     type = IterationAdaptiveDT
-    dt = 1e-4
+    dt = 1e-8
 		cutback_factor = 0.75
 		growth_factor = 1.5
 		iteration_window = 1

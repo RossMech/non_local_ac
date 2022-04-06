@@ -3,20 +3,20 @@
 #include "InitialCondition.h"
 
 
-class TwinSphereIC : public InitialCondition
+class TwoTwinLowerIC : public InitialCondition
 {
   public:
     static InputParameters validParams();
 
-    TwinSphereIC(const InputParameters & parameters);
+    TwoTwinLowerIC(const InputParameters & parameters);
 
   protected:
     virtual Real value(const Point & p);
 
     // Outside and inside values of the field
     const Real _outside;
-    const Real _inside_above;
-    const Real _inside_under;
+    const Real _inside;
+    const Real _int_width;
 
     // Geometrical parameters
     const Real _r; // radius
