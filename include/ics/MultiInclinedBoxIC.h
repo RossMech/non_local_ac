@@ -31,4 +31,7 @@ protected:
 
   // Number of geometrical objects
   const unsigned int _nbox;
+
+  // Diffusional width
+  const Real _int_width;
 };
