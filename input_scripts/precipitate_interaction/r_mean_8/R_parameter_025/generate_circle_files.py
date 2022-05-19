@@ -8,8 +8,10 @@ theta_rad = theta_deg * np.pi / 180
 # array with distance coefficient between circles
 r_coeff = np.array([0.25,0.5,1.0,2.0,4.0,8.0,16.0])
 
-# radius of the precipitate, nm
-R = 8
+# radius of the precipitates, nm
+R = 8 # the radius at R parameter = 0
+R1 = 9.70 # Radius of the first circle
+R2 = 5.82 # Radius of the second circle
 
 # array with distance between circles
 r_vect = R * r_coeff
@@ -51,8 +53,8 @@ for theta in theta_deg:
 
         # write a content in file
         file_var.write("x   y   z   r\n")
-        file_var.write(str(x_1)+"   "+str(y_1)+"    " +"0.0"+"   "+str(float(R))+"\n")
-        file_var.write(str(x_2)+"   "+str(y_2)+"    "+"0.0"+"   "+str(float(R))+"\n")
+        file_var.write(str(x_1)+"   "+str(y_1)+"    " +"0.0"+"   "+str(float(R1))+"\n")
+        file_var.write(str(x_2)+"   "+str(y_2)+"    "+"0.0"+"   "+str(float(R2))+"\n")
 
         # close file
         file_var.close()
