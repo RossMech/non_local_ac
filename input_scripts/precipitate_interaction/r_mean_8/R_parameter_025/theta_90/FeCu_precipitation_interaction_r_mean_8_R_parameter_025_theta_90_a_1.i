@@ -33,7 +33,7 @@
     order = FIRST
     [./InitialCondition]
       type = SmoothCircleFromFileIC
-      file_name = 'circles_theta_80_r_1.txt'
+      file_name = 'circles_theta_90_r_1.txt'
       invalue = 1.0
       outvalue = 0.0
       int_width = 0.3
