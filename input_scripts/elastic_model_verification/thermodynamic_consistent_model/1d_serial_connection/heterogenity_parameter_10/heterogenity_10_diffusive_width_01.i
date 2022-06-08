@@ -1,13 +1,23 @@
 [Mesh]
   type = GeneratedMesh
-  dim = 1
+  dim = 3
   xmin = -0.5
   xmax = 0.5
+  ymin = 0.0
+  ymax = 1.0
+  zmin = 0.0
+  zmax = 1.0
   nx = 1000
+  ny = 1
+  nz = 1
 []
 
 [Variables]
   [./disp_x]
+  [../]
+  [./disp_y]
+  [../]
+  [./disp_z]
   [../]
 []
 
@@ -21,7 +31,7 @@
   [./stress_right]
     type = Pressure
     variable = disp_x
-    displacements = 'disp_x'
+    displacements = 'disp_x disp_y disp_z'
     boundary = right
     component = 0
     factor = -1
@@ -30,7 +40,7 @@
 
 [Kernels]
   [./TensorMechanics]
-    displacements = 'disp_x'
+    displacements = 'disp_x disp_y disp_z'
   [../]
 []
 
@@ -67,7 +77,7 @@
   [../]
   [./strain]
     type = ComputeSmallStrain
-    displacements = 'disp_x'
+    displacements = 'disp_x disp_y disp_z'
     outputs = exodus
   [../]
   [./stress]
@@ -78,31 +88,26 @@
     w_beta = h_beta
     normal = normal
     phase = eta
-    compliance_alpha = compliance_alpha
     outputs = exodus
   [../]
-  #[./elastic_free_energy]
-  #  type = ElasticEnergyMaterial
-  #  f_name = f_elast
-  #  args = eta
-  #[../]
+  [./elastic_free_energy]
+    type = ElasticEnergyMinimal
+    f_name = f_el
+    args = eta
+  [../]
 []
 
 [AuxVariables]
   [./eta]
   [../]
-  #[./f_elast_aux]
-  #  order = CONSTANT
-  #  family = MONOMIAL
-  #[../]
+  [./f_elast_aux]
+    order = CONSTANT
+    family = MONOMIAL
+  [../]
   [./stress_aux]
     order = CONSTANT
     family = MONOMIAL
   [../]
-  #[./strain_aux]
-  #  order = CONSTANT
-  #  family = MONOMIAL
-  #[../]
 []
 
 [AuxKernels]
@@ -111,21 +116,11 @@
     variable = eta
     function = eta_profile_func
   [../]
-  #[./elast_aux]
-  #  type = MaterialRealAux
-  #  property = f_elast
-  #  variable = f_elast_aux
-  #[../]
-  #[./stress_aux]
-  #  type = MaterialRealTensorValueAux
-  #  property = stress
-  #  variable = stress_aux
-  #[../]
-  #[./strain_aux]
-  #  type = MaterialRealTensorValueAux
-  #  property = strain
-  #  variable = strain_aux
-  #[../]
+  [./elast_aux]
+    type = MaterialRealAux
+    property = f_el
+    variable = f_elast_aux
+  [../]
 []
 
 [Functions]
@@ -133,15 +128,15 @@
     type = ParsedFunction
     value = '0.5*(tanh(pi*x/omega)+1)'
     vars = omega
-    vals = 0.025
+    vals = 0.1
   [../]
 []
 
 [Postprocessors]
-  #[./total_f]
-  #  type = ElementIntegralVariablePostprocessor
-  #  variable = f_elast_aux
-  #[../]
+  [./total_f]
+    type = ElementIntegralVariablePostprocessor
+    variable = f_elast_aux
+  [../]
 []
 
 [Executioner]
