@@ -66,7 +66,7 @@
   [../]
   [./elasticity_tensor_beta]
     type = ComputeIsotropicElasticityTensor
-    youngs_modulus = 100
+    youngs_modulus = 10
     poissons_ratio = 0.3
     base_name = beta_phase
   [../]
@@ -81,14 +81,12 @@
     outputs = exodus
   [../]
   [./stress]
-    type = CalculateTheBinaryStress
+    type = BinaryRSApproximation
     base_name_alpha = alpha_phase
     base_name_beta = beta_phase
     w_alpha = h_alpha
     w_beta = h_beta
-    normal = normal
     phase = eta
-    compliance_alpha = compliance_alpha
     outputs = exodus
   [../]
   [./elastic_free_energy]
@@ -119,7 +117,7 @@
   [../]
   [./elast_aux]
     type = MaterialRealAux
-    property = f_elast
+    property = f_el
     variable = f_elast_aux
   [../]
 []
@@ -129,7 +127,7 @@
     type = ParsedFunction
     value = '0.5*(tanh(pi*x/omega)+1)'
     vars = omega
-    vals = 0.2
+    vals = 0.1
   [../]
 []
 
