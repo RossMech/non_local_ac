@@ -115,6 +115,7 @@
     type = FunctionAux
     variable = eta
     function = eta_profile_func
+    execute_on = 'ALWAYS'
   [../]
   [./elast_aux]
     type = MaterialRealAux

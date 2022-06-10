@@ -9,7 +9,7 @@
   zmax = 1.0
   nx = 1000
   ny = 1
-  nz = 1
+  nz = 20
 []
 
 [Variables]
@@ -18,6 +18,33 @@
   [./disp_y]
   [../]
   [./disp_z]
+  [../]
+[]
+
+[BCs]
+  [./pinned_bottom_z]
+    type = DirichletBC
+    variable = disp_z
+    boundary = back
+    value = 0.0
+  [../]
+  [./pinned_bottom_x]
+    type = DirichletBC
+    variable = disp_x
+    boundary = back
+    value = 0.0
+  [../]
+  [./pinned_bottom_y]
+    type = DirichletBC
+    variable = disp_y
+    boundary = back
+    value = 0.0
+  [../]
+  [./stretch_top]
+    type = DirichletBC
+    variable = disp_z
+    boundary = front
+    value = 1.0
   [../]
 []
 
@@ -66,7 +93,7 @@
   [../]
   [./elasticity_tensor_beta]
     type = ComputeIsotropicElasticityTensor
-    youngs_modulus = 100
+    youngs_modulus = 1
     poissons_ratio = 0.3
     base_name = beta_phase
   [../]
@@ -129,7 +156,7 @@
     type = ParsedFunction
     value = '0.5*(tanh(pi*x/omega)+1)'
     vars = omega
-    vals = 0.2
+    vals = 0.1
   [../]
 []
 

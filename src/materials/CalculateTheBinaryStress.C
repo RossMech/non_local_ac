@@ -132,8 +132,6 @@ CalculateTheBinaryStress::computeQpStress()
         _Jacobian_mult[_qp] = elasticity_RS;
       else
         _Jacobian_mult[_qp] = elasticity_VT;
-
-
   }
   // elastic strain is unchanged
   _elastic_strain[_qp] = _mechanical_strain[_qp];
