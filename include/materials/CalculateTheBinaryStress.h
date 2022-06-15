@@ -27,6 +27,7 @@
  	  // Elastic stiffness of the first and second phase
  	  std::string _base_name_alpha;
  	  const MaterialProperty<RankFourTensor> & _elasticity_tensor_alpha;
+
  	  std::string _base_name_beta;
  	  const MaterialProperty<RankFourTensor> & _elasticity_tensor_beta;
 
