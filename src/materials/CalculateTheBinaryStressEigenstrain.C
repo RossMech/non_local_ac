@@ -127,8 +127,8 @@ CalculateTheBinaryStressEigenstrain::computeQpStress()
       RankFourTensor elasticity_RS = compliance_RS.invSymm();
 
       // Stresses resulted from both bound-approximations
-      RankTwoTensor stress_VT = elasticity_VT * _mechanical_strain[_qp];
-      RankTwoTensor stress_RS = elasticity_RS * _mechanical_strain[_qp];
+      RankTwoTensor stress_VT = elasticity_VT * (_mechanical_strain[_qp] - _w_alpha[_qp]*_eigenstrain_alpha[_qp] - _w_beta[_qp]*_eigenstrain_beta[_qp]);
+      RankTwoTensor stress_RS = elasticity_RS * (_mechanical_strain[_qp] - _w_alpha[_qp]*_eigenstrain_alpha[_qp] - _w_beta[_qp]*_eigenstrain_beta[_qp]);
 
       // Errors of approximations
       RankTwoTensor delta_VT = stress_VT - _stress[_qp];
@@ -140,9 +140,13 @@ CalculateTheBinaryStressEigenstrain::computeQpStress()
 
       // use one of the bound approximations, when error is smaller
       if (delta_RS_norm < delta_VT_norm)
-        _Jacobian_mult[_qp] = elasticity_RS;
+       _Jacobian_mult[_qp] = elasticity_RS;
       else
-        _Jacobian_mult[_qp] = elasticity_VT;
+        {
+          _Jacobian_mult[_qp] = elasticity_RS;
+          //_Jacobian_mult[_qp] = elasticity_VT;
+        }
+        _Jacobian_mult[_qp] = elasticity_RS;
   }
   // elastic strain is unchanged
   _elastic_strain[_qp] = _mechanical_strain[_qp];

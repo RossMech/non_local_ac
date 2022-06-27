@@ -22,41 +22,19 @@
 []
 
 [BCs]
-  [./pinned_x_left]
+  [./pinned_left]
     type = DirichletBC
     variable = disp_x
     boundary = left
     value = 0.0
   [../]
-  [./pinned_y_left]
-    type = DirichletBC
-    variable = disp_y
-    boundary = left
-    value = 0.0
-  [../]
-  [./pinned_z_left]
-    type = DirichletBC
-    variable = disp_z
-    boundary = left
-    value = 0.0
-  [../]
-  [./pinned_x_right]
-    type = DirichletBC
+  [./stress_right]
+    type = Pressure
     variable = disp_x
+    displacements = 'disp_x disp_y disp_z'
     boundary = right
-    value = 0.0
-  [../]
-  [./pinned_y_right]
-    type = DirichletBC
-    variable = disp_y
-    boundary = right
-    value = 0.0
-  [../]
-  [./pinned_z_right]
-    type = DirichletBC
-    variable = disp_z
-    boundary = right
-    value = 0.0
+    component = 0
+    factor = -1
   [../]
 []
 
@@ -88,23 +66,9 @@
   [../]
   [./elasticity_tensor_beta]
     type = ComputeIsotropicElasticityTensor
-    youngs_modulus = 1
+    youngs_modulus = 10
     poissons_ratio = 0.3
     base_name = beta_phase
-  [../]
-  [./eigenstrain_alpha]
-    type = ComputeEigenstrain
-    eigenstrain_name = eigenstrain_alpha
-    eigen_base = '1e-2 0.0 0.0 0.0 0.0 0.0'
-    base_name = alpha_phase
-    outputs = exodus
-  [../]
-  [./eigenstrain_beta]
-    type = ComputeEigenstrain
-    eigenstrain_name = eigenstrain_beta
-    eigen_base = '1e-2 0.0 0.0 0.0 0.0 0.0'
-    base_name = beta_phase
-    outputs = exodus
   [../]
   [./normal]
     type = BinaryNormalVector
@@ -117,30 +81,19 @@
     outputs = exodus
   [../]
   [./stress]
-    type = CalculateTheBinaryStressEigenstrain
+    type = CalculateTheBinaryStress
     base_name_alpha = alpha_phase
     base_name_beta = beta_phase
-    eigenstrain_name_alpha = eigenstrain_alpha
-    eigenstrain_name_beta = eigenstrain_beta
     w_alpha = h_alpha
     w_beta = h_beta
     normal = normal
     phase = eta
     outputs = exodus
-    mismatch_tensor = mismatch_tensor
   [../]
   [./elastic_free_energy]
-    type = BinaryElasticEnergyEigenstrain
+    type = ElasticEnergyMinimal
     f_name = f_el
-    base_name_alpha = alpha_phase
-    base_name_beta = beta_phase
-    eigenstrain_name_alpha = eigenstrain_alpha
-    eigenstrain_name_beta = eigenstrain_beta
-    w_alpha = h_alpha
-    w_beta = h_beta
-    phase = eta
-    args = ''
-    mismatch_tensor = mismatch_tensor
+    args = eta
   [../]
 []
 

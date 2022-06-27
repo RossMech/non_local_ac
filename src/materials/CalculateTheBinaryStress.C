@@ -71,7 +71,7 @@ CalculateTheBinaryStress::computeQpStress()
 
     unsigned int n_dim = LIBMESH_DIM;
 
-    Real wave_elasticity_2_array[3][3];
+    Real wave_elasticity_2_array[3][3] = {};
 
     for (unsigned int i = 0; i < n_dim; i++)
       {
@@ -108,32 +108,78 @@ CalculateTheBinaryStress::computeQpStress()
       _stress[_qp] = elasticity_VT * _mechanical_strain[_qp]
                       + delta_elasticity * _w_alpha[_qp] * _w_beta[_qp] * mismatch_tensor;
 
-      // Following calculations are used for the approximation of Jacobian
+      RankThreeTensor delta_elasticity_3 = delta_elasticity.mixedProductIjklJ(_n[_qp]);
+      Real da_depsilon_array[3][3][3] = {};
 
-      // Calculation of elasticity tensor based on Reuss-Sachs method
-      RankFourTensor compliance_alpha = _elasticity_tensor_alpha[_qp].invSymm();
-      RankFourTensor compliance_beta = _elasticity_tensor_beta[_qp].invSymm();
-      RankFourTensor compliance_RS = _w_alpha[_qp] * compliance_alpha + _w_beta[_qp] * compliance_beta;
-      RankFourTensor elasticity_RS = compliance_RS.invSymm();
 
-      // Stresses resulted from both bound-approximations
-      RankTwoTensor stress_VT = elasticity_VT * _mechanical_strain[_qp];
-      RankTwoTensor stress_RS = elasticity_RS * _mechanical_strain[_qp];
 
-      // Errors of approximations
-      RankTwoTensor delta_VT = stress_VT - _stress[_qp];
-      RankTwoTensor delta_RS = stress_RS - _stress[_qp];
+      for (unsigned int i=0; i < n_dim;i++)
+      {
+        for (unsigned int j=0; j < n_dim;j++)
+        {
+          for (unsigned int k=0; k < n_dim;k++)
+          {
+            for (unsigned int l=0; l < n_dim;l++)
+            {
+              da_depsilon_array[i][k][l] += wave_elasticity_2_inv(i,j) * delta_elasticity_3(j,k,l);
+            }
+          }
+        }
+      }
 
-      // Scalar measure -> L2-norms of error tensors
-      Real delta_VT_norm = delta_VT.L2norm();
-      Real delta_RS_norm = delta_RS.L2norm();
+      std::vector<Real> mismatch_contribution_vector(81);
+      unsigned int m = 0;
+      for (unsigned int i=0; i < 3; i++)
+      {
+        for (unsigned int j=0; j < 3; j++)
+        {
+          for (unsigned int k=0; k < 3; k++)
+          {
+            for (unsigned int l=0; l < 3; l++)
+            {
+              mismatch_contribution_vector[m] += _n[_qp](i)*da_depsilon_array[j][k][l];
+              m++;
+            }
+          }
+        }
+      }
 
-      // use one of the bound approximations, when error is smaller
-      if (delta_RS_norm < delta_VT_norm)
-        _Jacobian_mult[_qp] = elasticity_RS;
-      else
-        _Jacobian_mult[_qp] = elasticity_VT;
-  }
+      RankFourTensor mismatch_contribution(mismatch_contribution_vector,RankFourTensor::general);
+      mismatch_contribution += mismatch_contribution.transposeIj();
+
+     _Jacobian_mult[_qp] = elasticity_VT - 0.5 * _w_alpha[_qp] * _w_beta[_qp] * delta_elasticity * mismatch_contribution;
+/*
+    if (_u[_qp] <= 0.51 && _u[_qp] >= 0.49 && _stress[_qp].L2norm() > 0.0)
+    {
+      std::cout << "eta = " << _u[_qp] << std::endl;
+
+      std::cout << "strain_00 = " << _mechanical_strain[_qp](0,0) << std::endl;
+      std::cout << "strain_11 = " << _mechanical_strain[_qp](1,1) << std::endl;
+      std::cout << "strain_22 = " << _mechanical_strain[_qp](2,2) << std::endl;
+      std::cout << "strain_12 = " << _mechanical_strain[_qp](0,1) << std::endl;
+      std::cout << "strain_13 = " << _mechanical_strain[_qp](0,2) << std::endl;
+      std::cout << "strain_23 = " << _mechanical_strain[_qp](1,2) << std::endl;
+
+
+      std::cout << "stress_00 = " << _stress[_qp](0,0) << std::endl;
+      std::cout << "stress_11 = " << _stress[_qp](1,1) << std::endl;
+      std::cout << "stress_22 = " << _stress[_qp](2,2) << std::endl;
+      std::cout << "stress_12 = " << _stress[_qp](0,1) << std::endl;
+      std::cout << "stress_13 = " << _stress[_qp](0,2) << std::endl;
+      std::cout << "stress_23 = " << _stress[_qp](1,2) << std::endl;
+
+      RankTwoTensor stress_jacobian;
+      stress_jacobian = _Jacobian_mult[_qp] * _mechanical_strain[_qp];
+      std::cout << "stress_jacobian_00 = " << stress_jacobian(0,0) << std::endl;
+      std::cout << "stress_jacobian_11 = " << stress_jacobian(1,1) << std::endl;
+      std::cout << "stress_jacobian_22 = " << stress_jacobian(2,2) << std::endl;
+      std::cout << "stress_jacobian_01 = " << stress_jacobian(0,1) << std::endl;
+      std::cout << "stress_jacobian_02 = " << stress_jacobian(0,2) << std::endl;
+      std::cout << "stress_jacobian_12 = " << stress_jacobian(1,2) << std::endl;
+      mooseError();
+    }
+*/
+    }
   // elastic strain is unchanged
   _elastic_strain[_qp] = _mechanical_strain[_qp];
 }

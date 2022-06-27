@@ -115,7 +115,7 @@
     type = FunctionAux
     variable = eta
     function = eta_profile_func
-    execute_on = 'ALWAYS'
+    execute_on = 'INITIAL LINEAR NONLINEAR TIMESTEP_END TIMESTEP_BEGIN FINAL'
   [../]
   [./elast_aux]
     type = MaterialRealAux
@@ -130,6 +130,7 @@
     value = '0.5*(tanh(pi*x/omega)+1)'
     vars = omega
     vals = 0.1
+    execute_on = 'INITIAL LINEAR NONLINEAR TIMESTEP_END TIMESTEP_BEGIN FINAL'
   [../]
 []
 
