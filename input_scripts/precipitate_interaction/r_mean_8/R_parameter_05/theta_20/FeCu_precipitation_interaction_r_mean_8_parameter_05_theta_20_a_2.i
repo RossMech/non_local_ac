@@ -1,7 +1,7 @@
 [Mesh]
   type = FileMesh
   dim = 2
-  file = square_heterogeneous_parameter_05_r_8_a_025.msh
+  file = square_heterogeneous_parameter_05_r_8_a_2.msh
 []
 
 [Adaptivity]
@@ -33,7 +33,7 @@
     order = FIRST
     [./InitialCondition]
       type = SmoothCircleFromFileIC
-      file_name = 'circles_theta_0_r_025.txt'
+      file_name = 'circles_theta_20_r_2.txt'
       invalue = 1.0
       outvalue = 0.0
       int_width = 0.3

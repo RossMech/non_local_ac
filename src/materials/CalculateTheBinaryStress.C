@@ -148,37 +148,6 @@ CalculateTheBinaryStress::computeQpStress()
       mismatch_contribution += mismatch_contribution.transposeIj();
 
      _Jacobian_mult[_qp] = elasticity_VT - 0.5 * _w_alpha[_qp] * _w_beta[_qp] * delta_elasticity * mismatch_contribution;
-/*
-    if (_u[_qp] <= 0.51 && _u[_qp] >= 0.49 && _stress[_qp].L2norm() > 0.0)
-    {
-      std::cout << "eta = " << _u[_qp] << std::endl;
-
-      std::cout << "strain_00 = " << _mechanical_strain[_qp](0,0) << std::endl;
-      std::cout << "strain_11 = " << _mechanical_strain[_qp](1,1) << std::endl;
-      std::cout << "strain_22 = " << _mechanical_strain[_qp](2,2) << std::endl;
-      std::cout << "strain_12 = " << _mechanical_strain[_qp](0,1) << std::endl;
-      std::cout << "strain_13 = " << _mechanical_strain[_qp](0,2) << std::endl;
-      std::cout << "strain_23 = " << _mechanical_strain[_qp](1,2) << std::endl;
-
-
-      std::cout << "stress_00 = " << _stress[_qp](0,0) << std::endl;
-      std::cout << "stress_11 = " << _stress[_qp](1,1) << std::endl;
-      std::cout << "stress_22 = " << _stress[_qp](2,2) << std::endl;
-      std::cout << "stress_12 = " << _stress[_qp](0,1) << std::endl;
-      std::cout << "stress_13 = " << _stress[_qp](0,2) << std::endl;
-      std::cout << "stress_23 = " << _stress[_qp](1,2) << std::endl;
-
-      RankTwoTensor stress_jacobian;
-      stress_jacobian = _Jacobian_mult[_qp] * _mechanical_strain[_qp];
-      std::cout << "stress_jacobian_00 = " << stress_jacobian(0,0) << std::endl;
-      std::cout << "stress_jacobian_11 = " << stress_jacobian(1,1) << std::endl;
-      std::cout << "stress_jacobian_22 = " << stress_jacobian(2,2) << std::endl;
-      std::cout << "stress_jacobian_01 = " << stress_jacobian(0,1) << std::endl;
-      std::cout << "stress_jacobian_02 = " << stress_jacobian(0,2) << std::endl;
-      std::cout << "stress_jacobian_12 = " << stress_jacobian(1,2) << std::endl;
-      mooseError();
-    }
-*/
     }
   // elastic strain is unchanged
   _elastic_strain[_qp] = _mechanical_strain[_qp];

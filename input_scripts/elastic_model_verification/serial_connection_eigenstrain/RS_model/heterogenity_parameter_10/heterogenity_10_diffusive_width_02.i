@@ -28,13 +28,11 @@
     boundary = left
     value = 0.0
   [../]
-  [./stress_right]
-    type = Pressure
+  [./pinned_right]
+    type = DirichletBC
     variable = disp_x
-    displacements = 'disp_x disp_y disp_z'
     boundary = right
-    component = 0
-    factor = -1
+    value = 0.0
   [../]
 []
 
@@ -70,23 +68,25 @@
     poissons_ratio = 0.3
     base_name = beta_phase
   [../]
-  [./normal]
-    type = BinaryNormalVector
-    phase = eta
-    normal_vector_name = normal
+  [./eigenstrain_alpha]
+    type = ComputeVariableEigenstrain
+    eigen_base = '0.1 0.0 0.0 0.0 0.0 0.0'
+    eigenstrain_name = 'eigenstrain'
+    prefactor = h_alpha
+    args = eta
   [../]
   [./strain]
     type = ComputeSmallStrain
     displacements = 'disp_x disp_y disp_z'
     outputs = exodus
+    eigenstrain_names = eigenstrain
   [../]
   [./stress]
-    type = CalculateTheBinaryStress
+    type = BinaryRSApproximation
     base_name_alpha = alpha_phase
     base_name_beta = beta_phase
     w_alpha = h_alpha
     w_beta = h_beta
-    normal = normal
     phase = eta
     outputs = exodus
   [../]
@@ -128,7 +128,7 @@
     type = ParsedFunction
     value = '0.5*(tanh(pi*x/omega)+1)'
     vars = omega
-    vals = 0.025
+    vals = 0.2
   [../]
 []
 

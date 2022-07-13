@@ -118,35 +118,46 @@ CalculateTheBinaryStressEigenstrain::computeQpStress()
                       - _w_alpha[_qp] * _elasticity_tensor_alpha[_qp] * _eigenstrain_alpha[_qp]
                       - _w_beta[_qp] * _elasticity_tensor_beta[_qp] * _eigenstrain_beta[_qp];
 
-      // Following calculations are used for the approximation of Jacobian
+                      RankThreeTensor delta_elasticity_3 = delta_elasticity.mixedProductIjklJ(_n[_qp]);
+                      Real da_depsilon_array[3][3][3] = {};
 
-      // Calculation of elasticity tensor based on Reuss-Sachs method
-      RankFourTensor compliance_alpha = _elasticity_tensor_alpha[_qp].invSymm();
-      RankFourTensor compliance_beta = _elasticity_tensor_beta[_qp].invSymm();
-      RankFourTensor compliance_RS = _w_alpha[_qp] * compliance_alpha + _w_beta[_qp] * compliance_beta;
-      RankFourTensor elasticity_RS = compliance_RS.invSymm();
 
-      // Stresses resulted from both bound-approximations
-      RankTwoTensor stress_VT = elasticity_VT * (_mechanical_strain[_qp] - _w_alpha[_qp]*_eigenstrain_alpha[_qp] - _w_beta[_qp]*_eigenstrain_beta[_qp]);
-      RankTwoTensor stress_RS = elasticity_RS * (_mechanical_strain[_qp] - _w_alpha[_qp]*_eigenstrain_alpha[_qp] - _w_beta[_qp]*_eigenstrain_beta[_qp]);
 
-      // Errors of approximations
-      RankTwoTensor delta_VT = stress_VT - _stress[_qp];
-      RankTwoTensor delta_RS = stress_RS - _stress[_qp];
+                      for (unsigned int i=0; i < n_dim;i++)
+                      {
+                        for (unsigned int j=0; j < n_dim;j++)
+                        {
+                          for (unsigned int k=0; k < n_dim;k++)
+                          {
+                            for (unsigned int l=0; l < n_dim;l++)
+                            {
+                              da_depsilon_array[i][k][l] += wave_elasticity_2_inv(i,j) * delta_elasticity_3(j,k,l);
+                            }
+                          }
+                        }
+                      }
 
-      // Scalar measure -> L2-norms of error tensors
-      Real delta_VT_norm = delta_VT.L2norm();
-      Real delta_RS_norm = delta_RS.L2norm();
+                      std::vector<Real> mismatch_contribution_vector(81);
+                      unsigned int m = 0;
+                      for (unsigned int i=0; i < 3; i++)
+                      {
+                        for (unsigned int j=0; j < 3; j++)
+                        {
+                          for (unsigned int k=0; k < 3; k++)
+                          {
+                            for (unsigned int l=0; l < 3; l++)
+                            {
+                              mismatch_contribution_vector[m] += _n[_qp](i)*da_depsilon_array[j][k][l];
+                              m++;
+                            }
+                          }
+                        }
+                      }
 
-      // use one of the bound approximations, when error is smaller
-      if (delta_RS_norm < delta_VT_norm)
-       _Jacobian_mult[_qp] = elasticity_RS;
-      else
-        {
-          _Jacobian_mult[_qp] = elasticity_RS;
-          //_Jacobian_mult[_qp] = elasticity_VT;
-        }
-        _Jacobian_mult[_qp] = elasticity_RS;
+                      RankFourTensor mismatch_contribution(mismatch_contribution_vector,RankFourTensor::general);
+                      mismatch_contribution += mismatch_contribution.transposeIj();
+
+                     _Jacobian_mult[_qp] = elasticity_VT - 0.5 * _w_alpha[_qp] * _w_beta[_qp] * delta_elasticity * mismatch_contribution;
   }
   // elastic strain is unchanged
   _elastic_strain[_qp] = _mechanical_strain[_qp];
