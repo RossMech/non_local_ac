@@ -22,7 +22,7 @@ ConsistentElasticDrivingForce::validParams()
 
 ConsistentElasticDrivingForce::ConsistentElasticDrivingForce(const InputParameters & parameters)
   : ACBulk<Real>(parameters),
-  _base_name(getParam<std::string>("base_name_alpha") + "_"),
+  _base_name(getParam<std::string>("base_name") + "_"),
   _mechanical_strain(getMaterialPropertyByName<RankTwoTensor>(_base_name+"mechanical_strain")),
   _stress(getMaterialPropertyByName<RankTwoTensor>(_base_name+"stress")),
   _n(getMaterialProperty<RealGradient>("normal")),
