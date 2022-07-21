@@ -26,9 +26,6 @@ private:
   const MaterialProperty<RankTwoTensor> & _mechanical_strain;
   const MaterialProperty<RankTwoTensor> & _stress;
 
-  // Normal vector
-  const MaterialProperty<RealGradient> & _n;
-
   // Mismatch tensor
   const MaterialProperty<RankTwoTensor> & _mismatch_tensor;
 

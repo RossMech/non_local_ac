@@ -16,7 +16,6 @@ ConsistentElasticDrivingForce::validParams()
   params.addRequiredParam<MaterialPropertyName>("mismatch_tensor","vector of mismatch, which results in different strains in phases");
   params.addRequiredParam<std::string>("base_name_alpha","Elasticity tensor of alpha phase eta = 1");
   params.addRequiredParam<std::string>("base_name_beta","Elasticity tensor of alpha phase eta = 0");
-  params.addRequiredParam<MaterialPropertyName>("normal","Normal between two phases");
   return params;
 }
 
@@ -25,7 +24,6 @@ ConsistentElasticDrivingForce::ConsistentElasticDrivingForce(const InputParamete
   _base_name(getParam<std::string>("base_name") + "_"),
   _mechanical_strain(getMaterialPropertyByName<RankTwoTensor>(_base_name+"mechanical_strain")),
   _stress(getMaterialPropertyByName<RankTwoTensor>(_base_name+"stress")),
-  _n(getMaterialProperty<RealGradient>("normal")),
   _mismatch_tensor(getMaterialProperty<RankTwoTensor>("mismatch_tensor")),
   _base_name_alpha(getParam<std::string>("base_name_alpha") + "_"), // read the elasticity tensor of alpha phase
   _elasticity_tensor_alpha(getMaterialPropertyByName<RankFourTensor>(_base_name_alpha+"elasticity_tensor")),

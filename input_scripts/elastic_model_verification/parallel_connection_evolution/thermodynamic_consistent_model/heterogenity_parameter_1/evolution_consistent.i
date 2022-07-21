@@ -89,15 +89,10 @@
   [../]
   [./eta_elastic]
     type = ConsistentElasticDrivingForce
-    variable = eta
-    mob_name = L
-    args = ''
-    w_alpha = h_alpha
     base_name = ''
-    mismatch_vector = a_vect
     base_name_alpha = alpha_phase
     base_name_beta = beta_phase
-    normal = normal
+    mismatch_tensor = mismatch_tensor
   [../]
 []
 
@@ -156,6 +151,7 @@
     normal = normal
     phase = eta
     outputs = exodus
+    mismatch_tensor = mismatch_tensor
   [../]
   [./f_bulk]
     type = DerivativeParsedMaterial
