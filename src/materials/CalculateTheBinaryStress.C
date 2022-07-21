@@ -26,7 +26,8 @@ CalculateTheBinaryStress::CalculateTheBinaryStress(const InputParameters & param
     _elasticity_tensor_alpha(getMaterialPropertyByName<RankFourTensor>(_base_name_alpha+"elasticity_tensor")),
     _base_name_beta(getParam<std::string>("base_name_beta") + "_"), // read the elasticity tensor of beta phase
     _elasticity_tensor_beta(getMaterialPropertyByName<RankFourTensor>(_base_name_beta+"elasticity_tensor")),
-    _n(getMaterialProperty<RealGradient>("normal"))
+    _n(getMaterialProperty<RealGradient>("normal")),
+    _mismatch_tensor(declareProperty<RankTwoTensor>("mismatch_tensor"))
 {
 }
 
@@ -96,17 +97,16 @@ CalculateTheBinaryStress::computeQpStress()
       const RealGradient a_vect = - wave_elasticity_2_inv * delta_sigma_vect;
 
       // Calculation of mismatch strain tensor
-      RankTwoTensor mismatch_tensor;
-      mismatch_tensor.vectorOuterProduct(a_vect,_n[_qp]);
-      mismatch_tensor += mismatch_tensor.transpose();
-      mismatch_tensor *= 0.5;
+      _mismatch_tensor[_qp].vectorOuterProduct(a_vect,_n[_qp]);
+      _mismatch_tensor[_qp] += _mismatch_tensor[_qp].transpose();
+      _mismatch_tensor[_qp] *= 0.5;
 
       // Approximation of elasticity tensor with Voigt-Taylor method
       RankFourTensor elasticity_VT = _w_alpha[_qp] * _elasticity_tensor_alpha[_qp] + _w_beta[_qp] * _elasticity_tensor_beta[_qp];
 
       // Elastic stress of binary mixture
       _stress[_qp] = elasticity_VT * _mechanical_strain[_qp]
-                      + delta_elasticity * _w_alpha[_qp] * _w_beta[_qp] * mismatch_tensor;
+                      + delta_elasticity * _w_alpha[_qp] * _w_beta[_qp] * _mismatch_tensor[_qp];
 
       RankThreeTensor delta_elasticity_3 = delta_elasticity.mixedProductIjklJ(_n[_qp]);
       Real da_depsilon_array[3][3][3] = {};

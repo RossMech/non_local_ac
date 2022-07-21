@@ -33,4 +33,7 @@
 
  	  // Normal vector
  	  const MaterialProperty<RealGradient> & _n;
+
+	 // Mismatch tensor
+	 MaterialProperty<RankTwoTensor> & _mismatch_tensor;
  	};
