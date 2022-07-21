@@ -77,7 +77,7 @@
   [./eta_bulk]
     type = AllenCahn
     variable = eta
-    f_name = f_total
+    f_name = f_bulk
     mob_name = L
     args = ''
   [../]
@@ -87,13 +87,25 @@
     mob_name = L
     kappa_name = kappa
   [../]
+  [./eta_elastic]
+    type = ConsistentElasticDrivingForce
+    variable = eta
+    mob_name = L
+    args = ''
+    w_alpha = h_alpha
+    base_name = ''
+    mismatch_vector = a_vect
+    base_name_alpha = alpha_phase
+    base_name_beta = beta_phase
+    normal = normal
+  [../]
 []
 
 [Materials]
   [./const]
     type = GenericConstantMaterial
     prop_names = 'L gab kappa mu'
-    prop_values = '1.0 1.5 0.0188 240.0'
+    prop_values = '1.0 1.5 0.0752 60'
   [../]
   [./h_alpha]
     type = DerivativeParsedMaterial
@@ -125,19 +137,25 @@
     displacements = 'disp_x disp_y disp_z'
     outputs = exodus
   [../]
-  [./elasticitytensor]
-    type = CompositeElasticityTensor
-    args = eta
-    tensors = 'alpha_phase beta_phase'
-    weights = 'h_alpha h_beta'
-  [../]
-  [./stress]
-    type = ComputeLinearElasticStress
+  [./normal]
+    type = BinaryNormalVector
+    phase = eta
+    normal_vector_name = normal
   [../]
   [./elastic_free_energy]
-    type = ElasticEnergyMaterial
-    args = 'eta'
-    f_name = f_elast
+    type = ElasticEnergyMinimal
+    f_name = f_el
+    args = eta
+  [../]
+  [./stress]
+    type = CalculateTheBinaryStress
+    base_name_alpha = alpha_phase
+    base_name_beta = beta_phase
+    w_alpha = h_alpha
+    w_beta = h_beta
+    normal = normal
+    phase = eta
+    outputs = exodus
   [../]
   [./f_bulk]
     type = DerivativeParsedMaterial
@@ -147,24 +165,20 @@
     function = 'mu*((eta*eta*eta*eta/4-eta*eta/2)+((1-eta)*(1-eta)*(1-eta)*(1-eta)/4
     -(1-eta)*(1-eta)/2)+(gab*(1-eta)*(1-eta)*eta*eta)+1/4)'
   [../]
-  [./total_free_energy]
+  [./total_energy]
     type = DerivativeSumMaterial
     f_name = f_total
+    sum_materials = 'f_bulk f_el'
     args = 'eta'
-    sum_materials = 'f_elast f_bulk'
   [../]
 []
 
 [AuxVariables]
+  [./f_total_aux]
+    order = CONSTANT
+    family = MONOMIAL
+  [../]
   [./f_elast_aux]
-    order = CONSTANT
-    family = MONOMIAL
-  [../]
-  [./stress_aux]
-    order = CONSTANT
-    family = MONOMIAL
-  [../]
-  [./f_dens]
     order = CONSTANT
     family = MONOMIAL
   [../]
@@ -173,22 +187,22 @@
 [AuxKernels]
   [./elast_aux]
     type = MaterialRealAux
-    property = f_elast
+    property = f_el
     variable = f_elast_aux
   [../]
   [./f_total_aux]
     type = TotalFreeEnergy
-    variable = f_dens
+    variable = f_total_aux
     f_name = f_total
-    interfacial_vars = 'eta'
-    kappa_names = 'kappa'
+    interfacial_vars = eta
+    kappa_names = kappa
   [../]
 []
 
 [Postprocessors]
   [./total_f]
     type = ElementIntegralVariablePostprocessor
-    variable = f_dens
+    variable = f_total_aux
   [../]
   [./delta_f]
     type = ChangeOverTimestepPostprocessor

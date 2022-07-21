@@ -116,7 +116,7 @@
   [../]
   [./elasticity_tensor_beta]
     type = ComputeIsotropicElasticityTensor
-    youngs_modulus = 1
+    youngs_modulus = 100
     poissons_ratio = 0.3
     base_name = beta_phase
   [../]

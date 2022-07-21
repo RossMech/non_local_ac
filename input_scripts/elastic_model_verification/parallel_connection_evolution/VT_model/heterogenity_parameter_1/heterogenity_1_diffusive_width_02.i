@@ -93,7 +93,7 @@
   [./const]
     type = GenericConstantMaterial
     prop_names = 'L gab kappa mu'
-    prop_values = '1.0 1.5 0.0188 240.0'
+    prop_values = '1.0 1.5 0.1504 30'
   [../]
   [./h_alpha]
     type = DerivativeParsedMaterial

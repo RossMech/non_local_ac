@@ -13,7 +13,7 @@ ConsistentElasticDrivingForce::validParams()
   params.addClassDescription("Adds thermodynamic consistent elastic driving force to the Allen-Cahn equation");
   params.addRequiredParam<MaterialPropertyName>("w_alpha","scalar weight");
   params.addRequiredParam<std::string>("base_name","Global base name");
-  params.addRequiredParam<MaterialPropertyName>("mismatch_vector","vector of mismatch, which results in different strains in phases");
+  params.addRequiredParam<MaterialPropertyName>("mismatch_tensor","vector of mismatch, which results in different strains in phases");
   params.addRequiredParam<std::string>("base_name_alpha","Elasticity tensor of alpha phase eta = 1");
   params.addRequiredParam<std::string>("base_name_beta","Elasticity tensor of alpha phase eta = 0");
   params.addRequiredParam<MaterialPropertyName>("normal","Normal between two phases");
@@ -26,7 +26,7 @@ ConsistentElasticDrivingForce::ConsistentElasticDrivingForce(const InputParamete
   _mechanical_strain(getMaterialPropertyByName<RankTwoTensor>(_base_name+"mechanical_strain")),
   _stress(getMaterialPropertyByName<RankTwoTensor>(_base_name+"stress")),
   _n(getMaterialProperty<RealGradient>("normal")),
-  _a_vect(getMaterialProperty<RealGradient>("mismatch_vector")),
+  _mismatch_tensor(getMaterialProperty<RankTwoTensor>("mismatch_tensor")),
   _base_name_alpha(getParam<std::string>("base_name_alpha") + "_"), // read the elasticity tensor of alpha phase
   _elasticity_tensor_alpha(getMaterialPropertyByName<RankFourTensor>(_base_name_alpha+"elasticity_tensor")),
   _base_name_beta(getParam<std::string>("base_name_beta") + "_"), // read the elasticity tensor of beta phase
@@ -53,15 +53,9 @@ ConsistentElasticDrivingForce::computeDFDOP(PFFunctionType type)
       // Check if code is performed on interface or in bulk
       if ((_u[_qp] > lower_bound) && (_u[_qp] < upper_bound))
       {
-        // Mismatch tensor
-        RankTwoTensor mismatch_tensor;
-        mismatch_tensor.vectorOuterProduct(_a_vect[_qp],_n[_qp]);
-        mismatch_tensor += mismatch_tensor.transpose();
-        mismatch_tensor *= 0.5;
-
         // Phase deformations
-        RankTwoTensor epsilon_alpha = _mechanical_strain[_qp] + (1-_w_alpha[_qp])*mismatch_tensor;
-        RankTwoTensor epsilon_beta = _mechanical_strain[_qp] - _w_alpha[_qp]*mismatch_tensor;
+        RankTwoTensor epsilon_alpha = _mechanical_strain[_qp] + (1-_w_alpha[_qp])*_mismatch_tensor[_qp];
+        RankTwoTensor epsilon_beta = _mechanical_strain[_qp] - _w_alpha[_qp]*_mismatch_tensor[_qp];
 
         // Phase stresses
         RankTwoTensor stress_alpha = _elasticity_tensor_alpha[_qp] * epsilon_alpha;
@@ -75,7 +69,7 @@ ConsistentElasticDrivingForce::computeDFDOP(PFFunctionType type)
         Real W_diff = W_alpha - W_beta;
 
         // Second term of the driving force
-        Real second_term = 0.5 * _stress[_qp].doubleContraction(mismatch_tensor);
+        Real second_term = 0.5 * _stress[_qp].doubleContraction(_mismatch_tensor[_qp]);
 
         return _dw_alpha_dop[_qp] * (W_diff - second_term);
       }

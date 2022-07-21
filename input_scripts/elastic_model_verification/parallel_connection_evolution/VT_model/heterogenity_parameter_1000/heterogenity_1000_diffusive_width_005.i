@@ -93,7 +93,7 @@
   [./const]
     type = GenericConstantMaterial
     prop_names = 'L gab kappa mu'
-    prop_values = '1.0 1.5 0.0188 240.0'
+    prop_values = '1.0 1.5 0.0376 120'
   [../]
   [./h_alpha]
     type = DerivativeParsedMaterial
@@ -116,7 +116,7 @@
   [../]
   [./elasticity_tensor_beta]
     type = ComputeIsotropicElasticityTensor
-    youngs_modulus = 1
+    youngs_modulus = 1000
     poissons_ratio = 0.3
     base_name = beta_phase
   [../]

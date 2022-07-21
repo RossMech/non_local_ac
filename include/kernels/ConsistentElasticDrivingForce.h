@@ -29,8 +29,8 @@ private:
   // Normal vector
   const MaterialProperty<RealGradient> & _n;
 
-  // Mismatch vector
-  const MaterialProperty<RealGradient> & _a_vect;
+  // Mismatch tensor
+  const MaterialProperty<RankTwoTensor> & _mismatch_tensor;
 
   // Stiffness tensors
   // Elastic stiffness of the first and second phase
