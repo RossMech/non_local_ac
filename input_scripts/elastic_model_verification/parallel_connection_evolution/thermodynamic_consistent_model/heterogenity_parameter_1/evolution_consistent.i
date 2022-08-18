@@ -89,10 +89,13 @@
   [../]
   [./eta_elastic]
     type = ConsistentElasticDrivingForce
-    base_name = ''
+    variable = eta
+    mob_name = L
+    mismatch_tensor = mismatch_tensor
     base_name_alpha = alpha_phase
     base_name_beta = beta_phase
-    mismatch_tensor = mismatch_tensor
+    w_alpha = h_alpha
+    normal = normal
   [../]
 []
 
@@ -100,7 +103,7 @@
   [./const]
     type = GenericConstantMaterial
     prop_names = 'L gab kappa mu'
-    prop_values = '1.0 1.5 0.0752 60'
+    prop_values = '1.0 1.5 0.0188 240.0'
   [../]
   [./h_alpha]
     type = DerivativeParsedMaterial
@@ -115,6 +118,14 @@
     function = '1-h_alpha'
     material_property_names = h_alpha
   [../]
+  [./f_bulk]
+    type = DerivativeParsedMaterial
+    f_name = f_bulk
+    args = 'eta'
+    material_property_names = 'mu gab'
+    function = 'mu*((eta*eta*eta*eta/4-eta*eta/2)+((1-eta)*(1-eta)*(1-eta)*(1-eta)/4
+    -(1-eta)*(1-eta)/2)+(gab*(1-eta)*(1-eta)*eta*eta)+1/4)'
+  [../]
   [./elasticity_tensor_alpha]
     type = ComputeIsotropicElasticityTensor
     youngs_modulus = 1
@@ -123,7 +134,7 @@
   [../]
   [./elasticity_tensor_beta]
     type = ComputeIsotropicElasticityTensor
-    youngs_modulus = 1
+    youngs_modulus = 10
     poissons_ratio = 0.3
     base_name = beta_phase
   [../]
@@ -137,13 +148,9 @@
     phase = eta
     normal_vector_name = normal
   [../]
-  [./elastic_free_energy]
-    type = ElasticEnergyMinimal
-    f_name = f_el
-    args = eta
-  [../]
   [./stress]
     type = CalculateTheBinaryStress
+    mismatch_tensor = mismatch_tensor
     base_name_alpha = alpha_phase
     base_name_beta = beta_phase
     w_alpha = h_alpha
@@ -151,30 +158,26 @@
     normal = normal
     phase = eta
     outputs = exodus
-    mismatch_tensor = mismatch_tensor
   [../]
-  [./f_bulk]
-    type = DerivativeParsedMaterial
-    f_name = f_bulk
-    args = 'eta'
-    material_property_names = 'mu gab'
-    function = 'mu*((eta*eta*eta*eta/4-eta*eta/2)+((1-eta)*(1-eta)*(1-eta)*(1-eta)/4
-    -(1-eta)*(1-eta)/2)+(gab*(1-eta)*(1-eta)*eta*eta)+1/4)'
+  [./elastic_free_energy]
+    type = ElasticEnergyMinimal
+    f_name = f_el
+    args = eta
   [../]
-  [./total_energy]
+  [./total_free_energy]
     type = DerivativeSumMaterial
     f_name = f_total
-    sum_materials = 'f_bulk f_el'
-    args = 'eta'
+    sum_materials = 'f_el f_bulk'
+    args = eta
   [../]
 []
 
 [AuxVariables]
-  [./f_total_aux]
+  [./f_elast_aux]
     order = CONSTANT
     family = MONOMIAL
   [../]
-  [./f_elast_aux]
+  [./f_total_aux]
     order = CONSTANT
     family = MONOMIAL
   [../]
@@ -204,10 +207,6 @@
     type = ChangeOverTimestepPostprocessor
     postprocessor = total_f
   [../]
-  [./time]
-    type = TimePostprocessor
-    execute_on = TIMESTEP_BEGIN
-  [../]
 []
 
 [Preconditioning]
@@ -217,18 +216,12 @@
   [../]
 []
 
-[UserObjects]
-  [./calculation_termination]
-    type = Terminator
-    expression = 'delta_f*(time > 1e-2) > 1e-8'
-  [../]
-[]
-
 [Executioner]
   type = Transient
   solve_type = PJFNK
-  scheme = bdf2
+  scheme = implicit-euler
   end_time = 1e8
+  num_steps  = 2
   l_max_its = 20#30
   nl_max_its = 50#50
 	nl_rel_tol = 1e-7 #1e-8
@@ -250,6 +243,9 @@
 []
 
 [Outputs]
-  exodus = true
+  [./exodus]
+    type = Exodus
+    interval = 10
+  [../]
   csv = true
 []

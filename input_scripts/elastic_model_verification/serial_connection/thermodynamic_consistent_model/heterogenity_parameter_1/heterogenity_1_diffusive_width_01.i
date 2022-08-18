@@ -1,12 +1,12 @@
 [Mesh]
   type = GeneratedMesh
   dim = 3
-  xmin = -0.5
-  xmax = 0.5
+  xmin = -5
+  xmax = 5
   ymin = 0.0
-  ymax = 1.0
+  ymax = 0.1
   zmin = 0.0
-  zmax = 1.0
+  zmax = 0.1
   nx = 1000
   ny = 1
   nz = 1
@@ -49,7 +49,7 @@
     type = DerivativeParsedMaterial
     args = eta
     f_name = h_alpha
-    function = 'eta*eta/(eta*eta+(1-eta)*(1-eta))'
+    function = 'eta'
   [../]
   [./h_beta]
     type = DerivativeParsedMaterial
@@ -70,26 +70,27 @@
     poissons_ratio = 0.3
     base_name = beta_phase
   [../]
-  [./normal]
-    type = BinaryNormalVector
-    phase = eta
-    normal_vector_name = normal
-  [../]
   [./strain]
     type = ComputeSmallStrain
     displacements = 'disp_x disp_y disp_z'
     outputs = exodus
   [../]
-  [./stress]
-    type = CalculateTheBinaryStress
-    base_name_alpha = alpha_phase
-    base_name_beta = beta_phase
-    w_alpha = h_alpha
-    w_beta = h_beta
-    normal = normal
+  [./normal]
+    type = BinaryNormalVector
     phase = eta
+    normal_vector_name = normal
     outputs = exodus
   [../]
+  [./stress]
+    type = CalculateTheBinaryStress
+      base_name_alpha = alpha_phase
+      base_name_beta = beta_phase
+      w_alpha = h_alpha
+      w_beta = h_beta
+      phase = eta
+      outputs = exodus
+      normal = normal
+    [../]
   [./elastic_free_energy]
     type = ElasticEnergyMinimal
     f_name = f_el
@@ -128,7 +129,7 @@
     type = ParsedFunction
     value = '0.5*(tanh(pi*x/omega)+1)'
     vars = omega
-    vals = 0.1
+    vals = 1.0
   [../]
 []
 

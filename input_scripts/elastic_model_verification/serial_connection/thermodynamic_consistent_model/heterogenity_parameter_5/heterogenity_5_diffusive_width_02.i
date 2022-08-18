@@ -1,12 +1,12 @@
 [Mesh]
   type = GeneratedMesh
   dim = 3
-  xmin = -0.5
-  xmax = 0.5
+  xmin = -5
+  xmax = 5
   ymin = 0.0
-  ymax = 1.0
+  ymax = 0.1
   zmin = 0.0
-  zmax = 1.0
+  zmax = 0.1
   nx = 1000
   ny = 1
   nz = 1
@@ -45,39 +45,91 @@
 []
 
 [Materials]
+  [./h_alpha]
+    type = DerivativeParsedMaterial
+    args = eta
+    f_name = h_alpha
+    function = 'eta'
+  [../]
+  [./h_beta]
+    type = DerivativeParsedMaterial
+    args = eta
+    f_name = h_beta
+    function = '1-h_alpha'
+    material_property_names = h_alpha
+  [../]
   [./elasticity_tensor_alpha]
     type = ComputeIsotropicElasticityTensor
-    youngs_modulus = 1.0
+    youngs_modulus = 1
     poissons_ratio = 0.3
+    base_name = alpha_phase
+  [../]
+  [./elasticity_tensor_beta]
+    type = ComputeIsotropicElasticityTensor
+    youngs_modulus = 5
+    poissons_ratio = 0.3
+    base_name = beta_phase
   [../]
   [./strain]
     type = ComputeSmallStrain
     displacements = 'disp_x disp_y disp_z'
     outputs = exodus
   [../]
-  [./stress]
-    type = ComputeLinearElasticStress
+  [./normal]
+    type = BinaryNormalVector
+    phase = eta
+    normal_vector_name = normal
     outputs = exodus
   [../]
+  [./stress]
+    type = CalculateTheBinaryStress
+      base_name_alpha = alpha_phase
+      base_name_beta = beta_phase
+      w_alpha = h_alpha
+      w_beta = h_beta
+      phase = eta
+      outputs = exodus
+      normal = normal
+    [../]
   [./elastic_free_energy]
     type = ElasticEnergyMinimal
     f_name = f_el
-    args = ''
+    args = eta
   [../]
 []
 
 [AuxVariables]
+  [./eta]
+  [../]
   [./f_elast_aux]
+    order = CONSTANT
+    family = MONOMIAL
+  [../]
+  [./stress_aux]
     order = CONSTANT
     family = MONOMIAL
   [../]
 []
 
 [AuxKernels]
+  [./eta_profile]
+    type = FunctionAux
+    variable = eta
+    function = eta_profile_func
+  [../]
   [./elast_aux]
     type = MaterialRealAux
     property = f_el
     variable = f_elast_aux
+  [../]
+[]
+
+[Functions]
+  [./eta_profile_func]
+    type = ParsedFunction
+    value = '0.5*(tanh(pi*x/omega)+1)'
+    vars = omega
+    vals = 2.0
   [../]
 []
 

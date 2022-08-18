@@ -93,7 +93,7 @@
   [./const]
     type = GenericConstantMaterial
     prop_names = 'L gab kappa mu'
-    prop_values = '1.0 1.5 0.0752 60'
+    prop_values = '1.0 1.5 0.0188 240.0'
   [../]
   [./h_alpha]
     type = DerivativeParsedMaterial
@@ -234,7 +234,7 @@
     linear_iteration_ratio = 100
     iteration_window = 1
     growth_factor = 1.1
-    dt=1e-2
+    dt=1e-1
     cutback_factor = 0.5
   [../]
 []

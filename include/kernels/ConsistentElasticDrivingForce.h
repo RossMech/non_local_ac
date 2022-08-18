@@ -18,29 +18,27 @@ public:
 
 protected:
   virtual Real computeDFDOP(PFFunctionType type);
-
 private:
+  // Weights of the phases
+  const MaterialProperty<Real> & _w_alpha;
+  const MaterialProperty<Real> & _dw_alpha_dop;
+  const MaterialProperty<Real> & _d2w_alpha_dop2;
+
+  // Mismatch tensor
+  const MaterialProperty<RankTwoTensor> & _mismatch_tensor;
+
+  // Base names and elastic properties of phases
+  const std::string _base_name_alpha;
+  const MaterialProperty<RankFourTensor> & _elasticity_tensor_alpha;
+
+  const std::string _base_name_beta;
+  const MaterialProperty<RankFourTensor> & _elasticity_tensor_beta;
 
   // Base name
   const std::string _base_name;
   const MaterialProperty<RankTwoTensor> & _mechanical_strain;
   const MaterialProperty<RankTwoTensor> & _stress;
 
-  // Mismatch tensor
-  const MaterialProperty<RankTwoTensor> & _mismatch_tensor;
-
-  // Stiffness tensors
-  // Elastic stiffness of the first and second phase
-  std::string _base_name_alpha;
-  const MaterialProperty<RankFourTensor> & _elasticity_tensor_alpha;
-
-  std::string _base_name_beta;
-  const MaterialProperty<RankFourTensor> & _elasticity_tensor_beta;
-
-  // Weights of the phases
-  const MaterialProperty<Real> & _w_alpha;
-  const MaterialProperty<Real> & _dw_alpha_dop;
-
-  // Variable value
-  const VariableValue & _u;
+  // phase interface normal
+  const MaterialProperty<RealGradient> & _n;
 };

@@ -49,7 +49,7 @@
     type = DerivativeParsedMaterial
     args = eta
     f_name = h_alpha
-    function = 'eta'
+    function = 'eta*eta*(3-2*eta)'
   [../]
   [./h_beta]
     type = DerivativeParsedMaterial
@@ -66,7 +66,7 @@
   [../]
   [./elasticity_tensor_beta]
     type = ComputeIsotropicElasticityTensor
-    youngs_modulus = 10
+    youngs_modulus = 1000
     poissons_ratio = 0.3
     base_name = beta_phase
   [../]
@@ -75,22 +75,15 @@
     displacements = 'disp_x disp_y disp_z'
     outputs = exodus
   [../]
-  [./normal]
-    type = BinaryNormalVector
+  [./stress]
+    type = BinaryRSApproximation
+    base_name_alpha = alpha_phase
+    base_name_beta = beta_phase
+    w_alpha = h_alpha
+    w_beta = h_beta
     phase = eta
-    normal_vector_name = normal
     outputs = exodus
   [../]
-  [./stress]
-    type = CalculateTheBinaryStress
-      base_name_alpha = alpha_phase
-      base_name_beta = beta_phase
-      w_alpha = h_alpha
-      w_beta = h_beta
-      phase = eta
-      outputs = exodus
-      normal = normal
-    [../]
   [./elastic_free_energy]
     type = ElasticEnergyMinimal
     f_name = f_el
@@ -129,7 +122,7 @@
     type = ParsedFunction
     value = '0.5*(tanh(pi*x/omega)+1)'
     vars = omega
-    vals = 2.0
+    vals = 0.2
   [../]
 []
 

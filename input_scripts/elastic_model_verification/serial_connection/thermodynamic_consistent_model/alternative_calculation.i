@@ -49,15 +49,15 @@
     type = DerivativeParsedMaterial
     args = eta
     f_name = h_alpha
-    function = 'eta*eta/(eta*eta+(1-eta)*(1-eta))'
+    function = 'eta*eta*(3-2*eta)'
   [../]
   [./h_beta]
     type = DerivativeParsedMaterial
     args = eta
     f_name = h_beta
-    function = '1-h_alpha'
-    material_property_names = h_alpha
+    function = '1 - eta*eta*(3-2*eta)'
   [../]
+
   [./elasticity_tensor_alpha]
     type = ComputeIsotropicElasticityTensor
     youngs_modulus = 1
@@ -66,7 +66,7 @@
   [../]
   [./elasticity_tensor_beta]
     type = ComputeIsotropicElasticityTensor
-    youngs_modulus = 100
+    youngs_modulus = 100000
     poissons_ratio = 0.3
     base_name = beta_phase
   [../]
@@ -81,7 +81,7 @@
     outputs = exodus
   [../]
   [./stress]
-    type = CalculateTheBinaryStress
+    type = CalculateTheBinaryStressAlternative
     base_name_alpha = alpha_phase
     base_name_beta = beta_phase
     w_alpha = h_alpha
@@ -90,6 +90,15 @@
     phase = eta
     outputs = exodus
   [../]
+#  [./stress]
+#    type = BinaryRSApproximation
+#    base_name_alpha = alpha_phase
+#    base_name_beta = beta_phase
+#    w_alpha = h_alpha
+#    w_beta = h_beta
+#    phase = eta
+#    outputs = exodus
+#  [../]
   [./elastic_free_energy]
     type = ElasticEnergyMinimal
     f_name = f_el
@@ -115,7 +124,6 @@
     type = FunctionAux
     variable = eta
     function = eta_profile_func
-    execute_on = 'ALWAYS'
   [../]
   [./elast_aux]
     type = MaterialRealAux
@@ -129,7 +137,7 @@
     type = ParsedFunction
     value = '0.5*(tanh(pi*x/omega)+1)'
     vars = omega
-    vals = 0.1
+    vals = 0.025
   [../]
 []
 

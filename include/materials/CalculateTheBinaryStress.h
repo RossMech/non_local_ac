@@ -22,7 +22,6 @@
 
  	  // Weights of the phases
  	  const MaterialProperty<Real> & _w_alpha;
- 	  const MaterialProperty<Real> & _w_beta;
 
  	  // Elastic stiffness of the first and second phase
  	  std::string _base_name_alpha;
