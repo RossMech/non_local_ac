@@ -15,7 +15,7 @@ for items in path_content:
         subdirectories.append(items)
 
 # array of heterogenities
-heterogenities = np.array([1, 10, 100, 1000])
+heterogenities = np.array([1, 2, 5, 10, 20])
 diffuse_widthes = np.array([0.2, 0.1, 0.05, 0.025])
 
 # create array with outputs are calculated
@@ -50,4 +50,4 @@ for directory in subdirectories:
 
             output_energy = np.vstack([output_energy, [heterogenity_dir, diffuse_width_file, energy]])
 
-np.savetxt('parallel_connection_thermodynamic_consistent_model_elastic_energy.csv',output_energy)
+np.savetxt('parallel_connection_RS_model_elastic_energy.csv',output_energy)

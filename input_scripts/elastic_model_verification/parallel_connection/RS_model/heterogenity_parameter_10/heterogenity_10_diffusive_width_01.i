@@ -6,7 +6,7 @@
   ymin = 0.0
   ymax = 1.0
   zmin = 0.0
-  zmax = 1.0
+  zmax = 10.0
   nx = 1000
   ny = 1
   nz = 20

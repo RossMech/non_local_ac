@@ -1,12 +1,12 @@
 [Mesh]
   type = GeneratedMesh
   dim = 3
-  xmin = -0.5
-  xmax = 0.5
+  xmin = -5.0
+  xmax = 5.0
   ymin = 0.0
-  ymax = 1.0
+  ymax = 0.1
   zmin = 0.0
-  zmax = 1.0
+  zmax = 0.1
   nx = 1000
   ny = 1
   nz = 1
@@ -49,7 +49,7 @@
     type = DerivativeParsedMaterial
     args = eta
     f_name = h_alpha
-    function = 'eta*eta/(eta*eta+(1-eta)*(1-eta))'
+    function = 'eta'
   [../]
   [./h_beta]
     type = DerivativeParsedMaterial
@@ -128,7 +128,7 @@
     type = ParsedFunction
     value = '0.5*(tanh(pi*x/omega)+1)'
     vars = omega
-    vals = 0.025
+    vals = 0.25
   [../]
 []
 

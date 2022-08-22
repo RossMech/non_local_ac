@@ -66,7 +66,7 @@
   [../]
   [./elasticity_tensor_beta]
     type = ComputeIsotropicElasticityTensor
-    youngs_modulus = 10
+    youngs_modulus = 20
     poissons_ratio = 0.3
     base_name = beta_phase
   [../]
@@ -123,7 +123,7 @@
     type = ParsedFunction
     value = '0.5*(tanh(pi*x/omega)+1)'
     vars = omega
-    vals = 0.2
+    vals = 2.0
   [../]
 []
 

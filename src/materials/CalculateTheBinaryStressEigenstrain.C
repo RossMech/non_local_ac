@@ -1,5 +1,6 @@
 #include "CalculateTheBinaryStressEigenstrain.h"
 #include <iostream>
+#include <cstdlib>
 
 registerMooseObject("TensorMechanicsApp", CalculateTheBinaryStressEigenstrain);
 
@@ -13,9 +14,9 @@ CalculateTheBinaryStressEigenstrain::validParams()
   params.addRequiredParam<MaterialPropertyName>("w_beta","scalar weight");
   params.addRequiredParam<std::string>("base_name_alpha","Elasticity tensor of alpha phase eta = 1");
   params.addRequiredParam<std::string>("base_name_beta","Elasticity tensor of alpha phase eta = 0");
-  params.addRequiredParam<std::string>("eigenstrain_name_alpha","Eigenstrain name in phase alpha");
-  params.addRequiredParam<std::string>("eigenstrain_name_beta","Eigenstrain name in phase beta");
   params.addRequiredParam<MaterialPropertyName>("normal","Normal between two phases");
+  params.addRequiredParam<std::string>("eigenstrain_name_alpha","Eigenstrain name in alpha phase");
+  params.addRequiredParam<std::string>("eigenstrain_name_beta","Eigenstrain name in beta phase");
   return params;
 }
 
@@ -23,7 +24,6 @@ CalculateTheBinaryStressEigenstrain::CalculateTheBinaryStressEigenstrain(const I
   : ComputeStressBase(parameters),
     _u(coupledValue("phase")), // phase variable value
     _w_alpha(getMaterialProperty<Real>("w_alpha")), // weight of alpha phase
-    _w_beta(getMaterialProperty<Real>("w_beta")), // weight of beta phase
     _base_name_alpha(getParam<std::string>("base_name_alpha") + "_"), // read the elasticity tensor of alpha phase
     _elasticity_tensor_alpha(getMaterialPropertyByName<RankFourTensor>(_base_name_alpha+"elasticity_tensor")),
     _base_name_beta(getParam<std::string>("base_name_beta") + "_"), // read the elasticity tensor of beta phase
@@ -65,99 +65,105 @@ CalculateTheBinaryStressEigenstrain::computeQpStress()
   }
   else
   {
-    // Calculate delta_sigma_vector, which rhs of equation for a estimation
+
+    Real w_beta = 1 - _w_alpha[_qp];
+
+
+     // Calculate delta_sigma_vector, which rhs of equation for a estimation
     const RankFourTensor delta_elasticity = _elasticity_tensor_alpha[_qp] - _elasticity_tensor_beta[_qp];
-    RankTwoTensor delta_sigma = delta_elasticity * _mechanical_strain[_qp]
-                                - _elasticity_tensor_alpha[_qp] * _eigenstrain_alpha[_qp]
-                                + _elasticity_tensor_beta[_qp] * _eigenstrain_beta[_qp];
 
-    const RealGradient delta_sigma_vect = delta_sigma * _n[_qp];
 
-    // Calculate the system matrix (tensor) for calculation of the mismatch vector (which is responsible for strain redistribution between phases)
-    const RankFourTensor wave_elasticity = _w_alpha[_qp]*_elasticity_tensor_beta[_qp] + _w_beta[_qp]*_elasticity_tensor_alpha[_qp];
+    const RankFourTensor C_wave = _w_alpha[_qp] * _elasticity_tensor_beta[_qp] + w_beta * _elasticity_tensor_alpha[_qp];
+    Real C_wave_2_array[3][3] = {};
 
-    const RankThreeTensor wave_elasticity_3 = wave_elasticity.mixedProductIjklJ(_n[_qp]);
+    RankTwoTensor N_tens;
+    N_tens.vectorOuterProduct(_n[_qp],_n[_qp]);
 
     unsigned int n_dim = LIBMESH_DIM;
-
-    Real wave_elasticity_2_array[3][3];
-
-    for (unsigned int i = 0; i < n_dim; i++)
+    for (unsigned int i=0; i < n_dim;i++)
+    {
+      for (unsigned int j=0; j < n_dim;j++)
       {
-        for (unsigned int j = 0; j < n_dim; j++)
+        for (unsigned int k=0; k < n_dim;k++)
         {
-          Real mult_result = 0.0;
-          for (unsigned int k = 0; k < n_dim; k++)
-            mult_result += wave_elasticity_3(i,j,k) * _n[_qp](k);
-
-          wave_elasticity_2_array[i][j] = mult_result;
+          for (unsigned int l=0; l< n_dim;l++)
+          {
+            C_wave_2_array[i][l] += N_tens(k,j) * C_wave(i,j,k,l);
+          }
         }
-
       }
+    }
 
-      // Construction of rank two tensor for access to the built-in inversion method
-      const RankTwoTensor wave_elasticity_2(wave_elasticity_2_array[0][0],wave_elasticity_2_array[1][1],
-                                            wave_elasticity_2_array[2][2],wave_elasticity_2_array[2][1],
-                                            wave_elasticity_2_array[2][0],wave_elasticity_2_array[1][0]);
-      const RankTwoTensor wave_elasticity_2_inv = wave_elasticity_2.inverse();
+    RankTwoTensor C_wave_2;
+    C_wave_2 = RankTwoTensor(C_wave_2_array[0][0],C_wave_2_array[1][1],C_wave_2_array[2][2],C_wave_2_array[1][2],C_wave_2_array[0][2],C_wave_2_array[0][1]);
 
-      // Mismatch vector
-      const RealGradient a_vect = - wave_elasticity_2_inv * delta_sigma_vect;
+    RankTwoTensor S_wave_2 = C_wave_2.inverse();
 
-      // Calculation of mismatch strain tensor
-      _mismatch_tensor[_qp].vectorOuterProduct(a_vect,_n[_qp]);
-      _mismatch_tensor[_qp] += _mismatch_tensor[_qp].transpose();
-      _mismatch_tensor[_qp] *= 0.5;
+    RankTwoTensor sigma_delta = delta_elasticity * _mechanical_strain[_qp]
+                                - _elasticity_tensor_alpha[_qp] * _eigenstrain_alpha[_qp]
+                                + _elasticity_tensor_beta[_qp] * _eigenstrain_beta[_qp];
+    RealGradient sigma_delta_vector = sigma_delta * _n[_qp];
 
-      // Approximation of elasticity tensor with Voigt-Taylor method
-      RankFourTensor elasticity_VT = _w_alpha[_qp] * _elasticity_tensor_alpha[_qp] + _w_beta[_qp] * _elasticity_tensor_beta[_qp];
+    RealGradient a_vect = - S_wave_2 * sigma_delta_vector;
 
-      // Elastic stress of binary mixture
-      _stress[_qp] = elasticity_VT * _mechanical_strain[_qp]
-                      + delta_elasticity * _w_alpha[_qp] * _w_beta[_qp] * _mismatch_tensor[_qp]
-                      - _w_alpha[_qp] * _elasticity_tensor_alpha[_qp] * _eigenstrain_alpha[_qp]
-                      - _w_beta[_qp] * _elasticity_tensor_beta[_qp] * _eigenstrain_beta[_qp];
+    _mismatch_tensor[_qp].vectorOuterProduct(a_vect,_n[_qp]);
+    _mismatch_tensor[_qp] += _mismatch_tensor[_qp].transpose();
+    _mismatch_tensor[_qp] *= 0.5;
 
-                      RankThreeTensor delta_elasticity_3 = delta_elasticity.mixedProductIjklJ(_n[_qp]);
-                      Real da_depsilon_array[3][3][3] = {};
+    // Approximation of elasticity tensor with Voigt-Taylor method
+    RankFourTensor elasticity_VT = _w_alpha[_qp] * _elasticity_tensor_alpha[_qp] + w_beta * _elasticity_tensor_beta[_qp];
+
+    // Elastic stress of binary mixture
+    //_stress[_qp] = elasticity_VT * _mechanical_strain[_qp];
+    _stress[_qp] = elasticity_VT * _mechanical_strain[_qp] + _w_alpha[_qp]* w_beta * delta_elasticity * _mismatch_tensor[_qp]
+                   - _w_alpha[_qp] * _elasticity_tensor_alpha[_qp] * _eigenstrain_alpha[_qp]
+                   - w_beta * _elasticity_tensor_beta[_qp] * _eigenstrain_beta[_qp];
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Calculation of Jacobian
+    // Multiplication with normal vector
+
+    RankThreeTensor delta_elasticity_3 = delta_elasticity.mixedProductIjklJ(_n[_qp]);
+    Real da_depsilon_array[3][3][3] = {};
 
 
 
-                      for (unsigned int i=0; i < n_dim;i++)
-                      {
-                        for (unsigned int j=0; j < n_dim;j++)
-                        {
-                          for (unsigned int k=0; k < n_dim;k++)
-                          {
-                            for (unsigned int l=0; l < n_dim;l++)
-                            {
-                              da_depsilon_array[i][k][l] += wave_elasticity_2_inv(i,j) * delta_elasticity_3(j,k,l);
-                            }
-                          }
-                        }
-                      }
+    for (unsigned int i=0; i < n_dim;i++)
+    {
+      for (unsigned int j=0; j < n_dim;j++)
+      {
+        for (unsigned int k=0; k < n_dim;k++)
+        {
+          for (unsigned int l=0; l < n_dim;l++)
+          {
+            da_depsilon_array[i][k][l] += S_wave_2(i,j) * delta_elasticity_3(j,k,l);
+          }
+        }
+      }
+    }
 
-                      std::vector<Real> mismatch_contribution_vector(81);
-                      unsigned int m = 0;
-                      for (unsigned int i=0; i < 3; i++)
-                      {
-                        for (unsigned int j=0; j < 3; j++)
-                        {
-                          for (unsigned int k=0; k < 3; k++)
-                          {
-                            for (unsigned int l=0; l < 3; l++)
-                            {
-                              mismatch_contribution_vector[m] += _n[_qp](i)*da_depsilon_array[j][k][l];
-                              m++;
-                            }
-                          }
-                        }
-                      }
+    std::vector<Real> mismatch_contribution_vector(81);
+    unsigned int m = 0;
+    for (unsigned int i=0; i < 3; i++)
+    {
+      for (unsigned int j=0; j < 3; j++)
+      {
+        for (unsigned int k=0; k < 3; k++)
+        {
+          for (unsigned int l=0; l < 3; l++)
+          {
+            mismatch_contribution_vector[m] += _n[_qp](i)*da_depsilon_array[j][k][l];
+            m++;
+          }
+        }
+      }
+    }
 
-                      RankFourTensor mismatch_contribution(mismatch_contribution_vector,RankFourTensor::general);
-                      mismatch_contribution += mismatch_contribution.transposeIj();
+    RankFourTensor mismatch_contribution(mismatch_contribution_vector,RankFourTensor::general);
+    mismatch_contribution += mismatch_contribution.transposeIj();
 
-                     _Jacobian_mult[_qp] = elasticity_VT - 0.5 * _w_alpha[_qp] * _w_beta[_qp] * delta_elasticity * mismatch_contribution;
+
+    _Jacobian_mult[_qp] = elasticity_VT - 0.5 * _w_alpha[_qp] * w_beta * delta_elasticity * mismatch_contribution;
   }
   // elastic strain is unchanged
   _elastic_strain[_qp] = _mechanical_strain[_qp];

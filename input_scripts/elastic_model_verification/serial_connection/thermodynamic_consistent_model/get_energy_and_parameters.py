@@ -15,7 +15,7 @@ for items in path_content:
         subdirectories.append(items)
 
 # array of heterogenities
-heterogenities = np.array([1, 10, 100, 1000])
+heterogenities = np.array([1, 2, 5, 10, 20])
 diffuse_widthes = np.array([0.2, 0.1, 0.05, 0.025])
 
 # create array with outputs are calculated

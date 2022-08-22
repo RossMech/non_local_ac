@@ -6,7 +6,7 @@
   ymin = 0.0
   ymax = 1.0
   zmin = 0.0
-  zmax = 1.0
+  zmax = 10.0
   nx = 1000
   ny = 1
   nz = 20
@@ -59,7 +59,7 @@
     type = DerivativeParsedMaterial
     args = eta
     f_name = h_alpha
-    function = 'eta*eta/(eta*eta+(1-eta)*(1-eta))'
+    function = 'eta'
   [../]
   [./h_beta]
     type = DerivativeParsedMaterial

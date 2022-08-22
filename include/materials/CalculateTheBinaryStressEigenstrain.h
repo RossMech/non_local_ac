@@ -22,7 +22,6 @@ public:
 
   // Weights of the phases
   const MaterialProperty<Real> & _w_alpha;
-  const MaterialProperty<Real> & _w_beta;
 
   // Elastic stiffness of the first and second phase
   std::string _base_name_alpha;
@@ -41,6 +40,6 @@ public:
   // Normal vector
   const MaterialProperty<RealGradient> & _n;
 
-  // Mismatch tensor
-  MaterialProperty<RankTwoTensor> & _mismatch_tensor;
+ // Mismatch tensor
+ MaterialProperty<RankTwoTensor> & _mismatch_tensor;
 };

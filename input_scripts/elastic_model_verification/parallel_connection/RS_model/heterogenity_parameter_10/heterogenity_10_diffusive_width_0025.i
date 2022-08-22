@@ -6,7 +6,7 @@
   ymin = 0.0
   ymax = 1.0
   zmin = 0.0
-  zmax = 1.0
+  zmax = 10.0
   nx = 1000
   ny = 1
   nz = 20
@@ -84,6 +84,12 @@
     type = ComputeSmallStrain
     displacements = 'disp_x disp_y disp_z'
     outputs = exodus
+  [../]
+  [./elasticitytensor]
+    type = CompositeElasticityTensor
+    args = eta
+    tensors = 'alpha_phase beta_phase'
+    weights = 'h_alpha h_beta'
   [../]
   [./stress]
     type = BinaryRSApproximation
