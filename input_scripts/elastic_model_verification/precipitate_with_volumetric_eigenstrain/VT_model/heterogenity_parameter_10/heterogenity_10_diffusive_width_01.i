@@ -76,7 +76,7 @@
     type = DerivativeParsedMaterial
     args = eta
     f_name = h_alpha
-    function = 'eta*eta/(eta*eta+(1-eta)*(1-eta))'
+    function = 'eta'
   [../]
   [./h_beta]
     type = DerivativeParsedMaterial
@@ -118,6 +118,7 @@
   [../]
   [./stress]
     type = ComputeLinearElasticStress
+    outputs = exodus
   [../]
   [./elastic_free_energy]
     type = ElasticEnergyMinimal
@@ -130,10 +131,6 @@
 #  [./eta]
 #  [../]
   [./f_elast_aux]
-    order = CONSTANT
-    family = MONOMIAL
-  [../]
-  [./stress_aux]
     order = CONSTANT
     family = MONOMIAL
   [../]

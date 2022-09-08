@@ -76,7 +76,7 @@
     type = DerivativeParsedMaterial
     args = eta
     f_name = h_alpha
-    function = 'eta*eta/(eta*eta+(1-eta)*(1-eta))'
+    function = 'eta'
   [../]
   [./h_beta]
     type = DerivativeParsedMaterial
