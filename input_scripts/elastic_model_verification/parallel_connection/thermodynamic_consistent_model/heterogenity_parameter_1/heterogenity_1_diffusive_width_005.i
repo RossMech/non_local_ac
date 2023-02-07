@@ -61,13 +61,6 @@
     f_name = h_alpha
     function = 'eta'
   [../]
-  [./h_beta]
-    type = DerivativeParsedMaterial
-    args = eta
-    f_name = h_beta
-    function = '1-h_alpha'
-    material_property_names = h_alpha
-  [../]
   [./elasticity_tensor_alpha]
     type = ComputeIsotropicElasticityTensor
     youngs_modulus = 1
@@ -90,20 +83,51 @@
     displacements = 'disp_x disp_y disp_z'
     outputs = exodus
   [../]
-  [./stress]
-    type = CalculateTheBinaryStress
+  [./elastichelper]
+    type = BinaryElasticPropertiesHelper
     base_name_alpha = alpha_phase
     base_name_beta = beta_phase
     w_alpha = h_alpha
-    w_beta = h_beta
     normal = normal
-    phase = eta
-    outputs = exodus
+    delta_elasticity = delta_elasticity
+    elasticity_VT = elasticity_VT
+    S_wave = S_wave
+    eta = eta
   [../]
-  [./elastic_free_energy]
-    type = ElasticEnergyMinimal
+  [./mismatch_tensor]
+    type = BinaryStrainMismatchTensor
+    eta = eta
+    w_alpha = h_alpha
+    base_name_alpha = alpha_phase
+    base_name_beta = beta_phase
+    normal = normal
+    mismatch_tensor = mismatch_tensor
+    delta_elasticity = delta_elasticity
+    S_wave = S_wave
+  [../]
+  [./stress]
+    type = CalculateTheBinaryStress
+      base_name_alpha = alpha_phase
+      base_name_beta = beta_phase
+      delta_elasticity = delta_elasticity
+      elasticity_VT = elasticity_VT
+      S_wave = S_wave
+      mismatch_tensor = mismatch_tensor
+      w_alpha = h_alpha
+      phase = eta
+      outputs = exodus
+      normal = normal
+  [../]
+  [./elastic_energy]
+    type = BinaryConsistentElasticEnergy
+    base_name_alpha = alpha_phase
+    base_name_beta = beta_phase
+    eta = eta
+    mismatch_tensor = mismatch_tensor
+    w_alpha = h_alpha
+    delta_elasticity = delta_elasticity
+    elasticity_VT = elasticity_VT
     f_name = f_el
-    args = eta
   [../]
 []
 
@@ -125,7 +149,6 @@
     type = FunctionAux
     variable = eta
     function = eta_profile_func
-    execute_on = 'ALWAYS'
   [../]
   [./elast_aux]
     type = MaterialRealAux

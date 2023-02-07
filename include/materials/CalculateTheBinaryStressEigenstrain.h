@@ -37,9 +37,13 @@ public:
   std::string _eigenstrain_name_beta;
   const MaterialProperty<RankTwoTensor> & _eigenstrain_beta;
 
+  const MaterialProperty<RankFourTensor> & _delta_elasticity;
+  const MaterialProperty<RankFourTensor> & _elasticity_VT;
+  const MaterialProperty<RankTwoTensor> & _S_wave_2;
+
   // Normal vector
   const MaterialProperty<RealGradient> & _n;
 
  // Mismatch tensor
- MaterialProperty<RankTwoTensor> & _mismatch_tensor;
+  const MaterialProperty<RankTwoTensor> & _mismatch_tensor;
 };

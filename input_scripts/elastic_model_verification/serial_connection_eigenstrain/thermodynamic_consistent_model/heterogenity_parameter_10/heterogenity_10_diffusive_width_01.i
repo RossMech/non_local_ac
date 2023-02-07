@@ -22,17 +22,31 @@
 []
 
 [BCs]
-  [./pinned_left]
+  [./pinned_left_x]
     type = DirichletBC
     variable = disp_x
     boundary = left
     value = 0.0
   [../]
-  [./pinned_right]
+  [./pinned_left_y]
     type = DirichletBC
-    variable = disp_x
-    boundary = right
+    variable = disp_y
+    boundary = left
     value = 0.0
+  [../]
+  [./pinned_left_z]
+    type = DirichletBC
+    variable = disp_z
+    boundary = left
+    value = 0.0
+  [../]
+  [./stress_right]
+    type = Pressure
+    variable = disp_x
+    displacements = 'disp_x disp_y disp_z'
+    boundary = right
+    component = 0
+    factor = -1
   [../]
 []
 
@@ -48,13 +62,6 @@
     args = eta
     f_name = h_alpha
     function = 'eta'
-  [../]
-  [./h_beta]
-    type = DerivativeParsedMaterial
-    args = eta
-    f_name = h_beta
-    function = '1-h_alpha'
-    material_property_names = h_alpha
   [../]
   [./elasticity_tensor_alpha]
     type = ComputeIsotropicElasticityTensor
@@ -90,33 +97,57 @@
     eigenstrain_name = 'eigenstrain_beta'
     base_name = 'beta_phase'
   [../]
+  [./elastichelper]
+    type = BinaryElasticPropertiesHelper
+    base_name_alpha = alpha_phase
+    base_name_beta = beta_phase
+    w_alpha = h_alpha
+    normal = normal
+    delta_elasticity = delta_elasticity
+    elasticity_VT = elasticity_VT
+    S_wave = S_wave
+    eta = eta
+  [../]
+  [./mismatch_tensor]
+    type = BinaryStrainMismatchTensorEigenstrain
+    eta = eta
+    w_alpha = h_alpha
+    base_name_alpha = alpha_phase
+    base_name_beta = beta_phase
+    normal = normal
+    mismatch_tensor = mismatch_tensor
+    delta_elasticity = delta_elasticity
+    S_wave = S_wave
+    eigenstrain_name_alpha = eigenstrain_alpha
+    eigenstrain_name_beta = eigenstrain_beta
+  [../]
   [./stress]
     type = CalculateTheBinaryStressEigenstrain
     base_name_alpha = alpha_phase
     base_name_beta = beta_phase
+    delta_elasticity = delta_elasticity
+    elasticity_VT = elasticity_VT
+    S_wave = S_wave
+    mismatch_tensor = mismatch_tensor
+    w_alpha = h_alpha
+    phase = eta
+    outputs = exodus
+    normal = normal
     eigenstrain_name_alpha = eigenstrain_alpha
     eigenstrain_name_beta = eigenstrain_beta
-    w_alpha = h_alpha
-    w_beta = h_beta
-    normal = normal
-    phase = eta
-    mismatch_tensor = mismatch_tensor
-    outputs = exodus
   [../]
-  [./elastic_free_energy]
-    type = BinaryElasticEnergyEigenstrain
+  [./elastic_energy]
+    type = BinaryConsistentElasticEnergyEigenstrain
     base_name_alpha = alpha_phase
     base_name_beta = beta_phase
+    eta = eta
+    mismatch_tensor = mismatch_tensor
+    w_alpha = h_alpha
+    delta_elasticity = delta_elasticity
+    elasticity_VT = elasticity_VT
+    f_name = f_el
     eigenstrain_name_alpha = eigenstrain_alpha
     eigenstrain_name_beta = eigenstrain_beta
-    w_alpha = h_alpha
-    w_beta = h_beta
-    normal = normal
-    phase = eta
-    mismatch_tensor = mismatch_tensor
-    outputs = exodus
-    args = ''
-    f_name = f_el
   [../]
 []
 
@@ -124,10 +155,6 @@
   [./eta]
   [../]
   [./f_elast_aux]
-    order = CONSTANT
-    family = MONOMIAL
-  [../]
-  [./stress_aux]
     order = CONSTANT
     family = MONOMIAL
   [../]

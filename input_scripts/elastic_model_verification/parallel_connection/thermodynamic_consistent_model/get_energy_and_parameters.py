@@ -50,4 +50,4 @@ for directory in subdirectories:
 
             output_energy = np.vstack([output_energy, [heterogenity_dir, diffuse_width_file, energy]])
 
-np.savetxt('parallel_connection_RS_model_elastic_energy.csv',output_energy)
+np.savetxt('parallel_connection_thermodynamic_consistent_model_elastic_energy.csv',output_energy)

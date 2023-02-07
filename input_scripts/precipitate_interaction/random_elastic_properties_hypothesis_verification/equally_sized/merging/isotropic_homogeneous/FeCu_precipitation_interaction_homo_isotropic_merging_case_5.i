@@ -2,7 +2,7 @@
 [Mesh]
 	type = FileMesh
 	dim = 2
-	file = square_reduced_r_6.msh
+	file = mesh_case_5.msh
 []
 
 [Adaptivity]
@@ -32,10 +32,8 @@
     family = LAGRANGE
     order = FIRST
     [./InitialCondition]
-      type = SmoothCircleIC
-      x1 = 0.0
-      y1 = 0.0
-      radius = 6.0
+      type = SmoothCircleFromFileIC
+      file_name = 'circles_case_5.txt'
       invalue = 1.0
       outvalue = 0.0
       int_width = 0.3
@@ -45,10 +43,8 @@
 		family = LAGRANGE
 		order = FIRST
 		[./InitialCondition]
-			type = SmoothCircleIC
-			x1 = 0.0
-      y1 = 0.0
-      radius = 6.0
+		type = SmoothCircleFromFileIC
+      file_name = 'circles_case_5.txt'
       invalue = 0.0
       outvalue = 1.0
       int_width = 0.3
@@ -62,24 +58,18 @@
 []
 
 [BCs]
-  [./node_pinning_x]
-		type = DirichletBC
-		variable = disp_x
-		value = 0.0
-		boundary = 1
-	[../]
-	[./node_pinning_y]
-		type = DirichletBC
-		variable = disp_y
-		value = 0.0
-		boundary = 1
-	[../]
-	[./anti_symmetry_x]
-		type = DirichletBC
-		variable = disp_x
-		value = 0.0
-		boundary = 2
-	[../]
+  [./disp_y]
+    type = DirichletBC
+    variable = disp_y
+    boundary = 1
+    value = 0
+  [../]
+  [./disp_x]
+    type = DirichletBC
+    variable = disp_x
+    boundary = 1
+    value = 0
+  [../]
 []
 
 [Kernels]
@@ -221,10 +211,23 @@
     type = ComputeElasticityTensor
     C_ijkl = '81.3768 0.4'
     fill_method = symmetric_isotropic_E_nu
+    base_name = stiffness_matrix
   [../]
+  [./elasticity_tensor_precipitate]
+		type = ComputeElasticityTensor
+		C_ijkl = '81.3768 0.4'
+		fill_method = symmetric_isotropic_E_nu
+		base_name = stiffness_precipitate
+	[../]
+  [./effective_elastic_tensor]
+		type = CompositeElasticityTensor
+		args = 'etaa etab'
+		tensors = 'stiffness_precipitate stiffness_matrix'
+		weights = 'ha                    hb'
+	[../]
   [./eigenstrain]
     type = ComputeVariableEigenstrain
-    eigen_base = '0.0375519 0.0828481 0.0 0.0 0.0 -0.1824015'
+    eigen_base = '0.2417 -0.1213 -0.1107 0.0053 0.0183 -0.029'
 		prefactor = ha
     args = 'etaa etab'
     eigenstrain_name = eigenstrain
@@ -355,11 +358,11 @@
   # maximum of 5% increase per time step
   [./TimeStepper]
     type = IterationAdaptiveDT
-    optimal_iterations = 10
+    optimal_iterations = 5
     linear_iteration_ratio = 100
     iteration_window = 1
     growth_factor = 1.1
-    dt=5e-1
+    dt=1e-5
     cutback_factor = 0.5
   [../]
 []

@@ -11,12 +11,14 @@ CalculateTheBinaryStressEigenstrain::validParams()
   params.addClassDescription("Compute stress using elasticity for small strains");
   params.addRequiredCoupledVar("phase","Phase variable");
   params.addRequiredParam<MaterialPropertyName>("w_alpha","scalar weight");
-  params.addRequiredParam<MaterialPropertyName>("w_beta","scalar weight");
   params.addRequiredParam<std::string>("base_name_alpha","Elasticity tensor of alpha phase eta = 1");
   params.addRequiredParam<std::string>("base_name_beta","Elasticity tensor of alpha phase eta = 0");
   params.addRequiredParam<MaterialPropertyName>("normal","Normal between two phases");
   params.addRequiredParam<std::string>("eigenstrain_name_alpha","Eigenstrain name in alpha phase");
   params.addRequiredParam<std::string>("eigenstrain_name_beta","Eigenstrain name in beta phase");
+  params.addRequiredParam<MaterialPropertyName>("delta_elasticity","Difference in elasticity tensors of both phases");
+  params.addRequiredParam<MaterialPropertyName>("elasticity_VT","VT approximation of elasticity tensor");
+  params.addRequiredParam<MaterialPropertyName>("S_wave","C_alpha*h_beta + C_beta*h_alpha inversed and normalized to second order tensor");
   return params;
 }
 
@@ -32,8 +34,11 @@ CalculateTheBinaryStressEigenstrain::CalculateTheBinaryStressEigenstrain(const I
     _eigenstrain_alpha(getMaterialPropertyByName<RankTwoTensor>(_eigenstrain_name_alpha)),
     _eigenstrain_name_beta(_base_name_beta + getParam<std::string>("eigenstrain_name_beta")),
     _eigenstrain_beta(getMaterialPropertyByName<RankTwoTensor>(_eigenstrain_name_beta)),
+    _delta_elasticity(getMaterialProperty<RankFourTensor>("delta_elasticity")),
+    _elasticity_VT(getMaterialProperty<RankFourTensor>("elasticity_VT")),
+    _S_wave_2(getMaterialProperty<RankTwoTensor>("S_wave")),
     _n(getMaterialProperty<RealGradient>("normal")),
-    _mismatch_tensor(declareProperty<RankTwoTensor>("mismatch_tensor"))
+    _mismatch_tensor(getMaterialProperty<RankTwoTensor>("mismatch_tensor"))
 {
 }
 
@@ -67,17 +72,17 @@ CalculateTheBinaryStressEigenstrain::computeQpStress()
   {
 
     Real w_beta = 1 - _w_alpha[_qp];
+    // Elastic stress of binary mixture
+    _stress[_qp] = _elasticity_VT[_qp] * _mechanical_strain[_qp] + _w_alpha[_qp]* w_beta * _delta_elasticity[_qp] * _mismatch_tensor[_qp]
+                   - _w_alpha[_qp] * _elasticity_tensor_alpha[_qp] * _eigenstrain_alpha[_qp]
+                   - w_beta * _elasticity_tensor_beta[_qp] * _eigenstrain_beta[_qp];
 
+    ////////////////////////////////////////////////////////////////////////////
+    // Calculation of Jacobian
+    // Multiplication with normal vector
 
-     // Calculate delta_sigma_vector, which rhs of equation for a estimation
-    const RankFourTensor delta_elasticity = _elasticity_tensor_alpha[_qp] - _elasticity_tensor_beta[_qp];
-
-
-    const RankFourTensor C_wave = _w_alpha[_qp] * _elasticity_tensor_beta[_qp] + w_beta * _elasticity_tensor_alpha[_qp];
-    Real C_wave_2_array[3][3] = {};
-
-    RankTwoTensor N_tens;
-    N_tens.vectorOuterProduct(_n[_qp],_n[_qp]);
+    RankThreeTensor delta_elasticity_3 = _delta_elasticity[_qp].mixedProductIjklJ(_n[_qp]);
+    Real da_depsilon_array[3][3][3] = {};
 
     unsigned int n_dim = LIBMESH_DIM;
     for (unsigned int i=0; i < n_dim;i++)
@@ -86,57 +91,9 @@ CalculateTheBinaryStressEigenstrain::computeQpStress()
       {
         for (unsigned int k=0; k < n_dim;k++)
         {
-          for (unsigned int l=0; l< n_dim;l++)
-          {
-            C_wave_2_array[i][l] += N_tens(k,j) * C_wave(i,j,k,l);
-          }
-        }
-      }
-    }
-
-    RankTwoTensor C_wave_2;
-    C_wave_2 = RankTwoTensor(C_wave_2_array[0][0],C_wave_2_array[1][1],C_wave_2_array[2][2],C_wave_2_array[1][2],C_wave_2_array[0][2],C_wave_2_array[0][1]);
-
-    RankTwoTensor S_wave_2 = C_wave_2.inverse();
-
-    RankTwoTensor sigma_delta = delta_elasticity * _mechanical_strain[_qp]
-                                - _elasticity_tensor_alpha[_qp] * _eigenstrain_alpha[_qp]
-                                + _elasticity_tensor_beta[_qp] * _eigenstrain_beta[_qp];
-    RealGradient sigma_delta_vector = sigma_delta * _n[_qp];
-
-    RealGradient a_vect = - S_wave_2 * sigma_delta_vector;
-
-    _mismatch_tensor[_qp].vectorOuterProduct(a_vect,_n[_qp]);
-    _mismatch_tensor[_qp] += _mismatch_tensor[_qp].transpose();
-    _mismatch_tensor[_qp] *= 0.5;
-
-    // Approximation of elasticity tensor with Voigt-Taylor method
-    RankFourTensor elasticity_VT = _w_alpha[_qp] * _elasticity_tensor_alpha[_qp] + w_beta * _elasticity_tensor_beta[_qp];
-
-    // Elastic stress of binary mixture
-    //_stress[_qp] = elasticity_VT * _mechanical_strain[_qp];
-    _stress[_qp] = elasticity_VT * _mechanical_strain[_qp] + _w_alpha[_qp]* w_beta * delta_elasticity * _mismatch_tensor[_qp]
-                   - _w_alpha[_qp] * _elasticity_tensor_alpha[_qp] * _eigenstrain_alpha[_qp]
-                   - w_beta * _elasticity_tensor_beta[_qp] * _eigenstrain_beta[_qp];
-
-    ////////////////////////////////////////////////////////////////////////////
-    // Calculation of Jacobian
-    // Multiplication with normal vector
-
-    RankThreeTensor delta_elasticity_3 = delta_elasticity.mixedProductIjklJ(_n[_qp]);
-    Real da_depsilon_array[3][3][3] = {};
-
-
-
-    for (unsigned int i=0; i < n_dim;i++)
-    {
-      for (unsigned int j=0; j < n_dim;j++)
-      {
-        for (unsigned int k=0; k < n_dim;k++)
-        {
           for (unsigned int l=0; l < n_dim;l++)
           {
-            da_depsilon_array[i][k][l] += S_wave_2(i,j) * delta_elasticity_3(j,k,l);
+            da_depsilon_array[i][k][l] += _S_wave_2[_qp](i,j) * delta_elasticity_3(j,k,l);
           }
         }
       }
@@ -163,7 +120,7 @@ CalculateTheBinaryStressEigenstrain::computeQpStress()
     mismatch_contribution += mismatch_contribution.transposeIj();
 
 
-    _Jacobian_mult[_qp] = elasticity_VT - 0.5 * _w_alpha[_qp] * w_beta * delta_elasticity * mismatch_contribution;
+    _Jacobian_mult[_qp] = _elasticity_VT[_qp] - 0.5 * _w_alpha[_qp] * w_beta * _delta_elasticity[_qp] * mismatch_contribution;
   }
   // elastic strain is unchanged
   _elastic_strain[_qp] = _mechanical_strain[_qp];
