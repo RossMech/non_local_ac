@@ -142,7 +142,7 @@
   [./const]
     type = GenericConstantMaterial
     prop_names =  'L   gab  kappa   mu'
-    prop_values = '1.0 1.5  0.13    5.5385'
+    prop_values = '1.0 1.5  0.1     7.2'
   [../]
   # =========================================================Switching Functions
   [./wa]

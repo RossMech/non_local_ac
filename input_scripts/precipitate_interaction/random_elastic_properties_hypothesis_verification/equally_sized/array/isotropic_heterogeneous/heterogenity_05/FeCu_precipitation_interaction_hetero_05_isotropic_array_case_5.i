@@ -1,14 +1,15 @@
+# note: check elastic energy at start of the transformation
 [Mesh]
-  type = FileMesh
-  dim = 2
-  file = mesh_case_4.msh
+	type = FileMesh
+	dim = 2
+	file = mesh_case_5.msh
 []
 
 [Adaptivity]
-	max_h_level = 5
+	max_h_level = 4
 	marker = marker
 	initial_marker = marker
-	initial_steps = 5
+	initial_steps = 4
 	[./Markers]
 		[./marker]
 			type = ValueRangeMarker
@@ -27,28 +28,26 @@
 
 [Variables]
   # Order variables
-  # precipitate
   [./etaa]
     family = LAGRANGE
     order = FIRST
     [./InitialCondition]
       type = SmoothCircleFromFileIC
-      file_name = 'circles_case_4.txt'
+      file_name = 'circles_case_5.txt'
       invalue = 1.0
       outvalue = 0.0
-      int_width = 0.4
+      int_width = 0.3
     [../]
   [../]
-  # matrix
 	[./etab]
 		family = LAGRANGE
 		order = FIRST
 		[./InitialCondition]
-      type = SmoothCircleFromFileIC
-      file_name = 'circles_case_4.txt'
+		type = SmoothCircleFromFileIC
+      file_name = 'circles_case_5.txt'
       invalue = 0.0
       outvalue = 1.0
-      int_width = 0.4
+      int_width = 0.3
     [../]
 	[../]
   # Displacements
@@ -142,7 +141,7 @@
   [./const]
     type = GenericConstantMaterial
     prop_names =  'L   gab  kappa   mu'
-    prop_values = '1.0 1.5  0.13    5.5385'
+    prop_values = '1.0 1.5  0.1     7.2'
   [../]
   # =========================================================Switching Functions
   [./wa]
@@ -151,13 +150,13 @@
     f_name = wa
     function = '3*etaa*etaa - 2*etaa*etaa*etaa'
   [../]
-  [./wa_diff]
-    type = DerivativeParsedMaterial
-    args = etaa
-    f_name = wa_diff
-    material_property_names = 'dwa:=D[wa(etaa),etaa]'
-    function = 'dwa'
-  [../]
+	[./wa_diff]
+		type = DerivativeParsedMaterial
+		args = etaa
+		f_name = wa_diff
+		material_property_names = 'dwa:=D[wa(etaa),etaa]'
+		function = 'dwa'
+	[../]
   [./ha]
     type = SwitchingFunctionMultiPhaseMaterial
     h_name = ha
@@ -216,8 +215,8 @@
   [../]
   [./elasticity_tensor_precipitate]
 		type = ComputeElasticityTensor
-		C_ijkl = '81.3768 0.4'
-    fill_method = symmetric_isotropic_E_nu
+		C_ijkl = '40.6884 0.4'
+		fill_method = symmetric_isotropic_E_nu
 		base_name = stiffness_precipitate
 	[../]
   [./effective_elastic_tensor]
@@ -363,7 +362,7 @@
     linear_iteration_ratio = 100
     iteration_window = 1
     growth_factor = 1.1
-    dt=1e-2
+    dt=1e-5
     cutback_factor = 0.5
   [../]
 []

@@ -210,8 +210,8 @@
   #===================================================================Elasticity
   [./elasticity_tensor_matrix]
     type = ComputeElasticityTensor
-    C_ijkl = '81.3768 0.4'
-    fill_method = symmetric_isotropic_E_nu
+    C_ijkl = '184.30 126.46 126.46 184.30 126.46 184.30 7.23 7.23 7.23'
+    fill_method = symmetric9
     base_name = stiffness_matrix
   [../]
   [./elasticity_tensor_precipitate]

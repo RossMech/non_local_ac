@@ -1,14 +1,14 @@
 [Mesh]
   type = FileMesh
   dim = 2
-  file = mesh_case_4.msh
+  file = mesh_case_1.msh
 []
 
 [Adaptivity]
-	max_h_level = 5
+	max_h_level = 4
 	marker = marker
 	initial_marker = marker
-	initial_steps = 5
+	initial_steps = 4
 	[./Markers]
 		[./marker]
 			type = ValueRangeMarker
@@ -33,7 +33,7 @@
     order = FIRST
     [./InitialCondition]
       type = SmoothCircleFromFileIC
-      file_name = 'circles_case_4.txt'
+      file_name = 'circles_case_1.txt'
       invalue = 1.0
       outvalue = 0.0
       int_width = 0.4
@@ -45,7 +45,7 @@
 		order = FIRST
 		[./InitialCondition]
       type = SmoothCircleFromFileIC
-      file_name = 'circles_case_4.txt'
+      file_name = 'circles_case_1.txt'
       invalue = 0.0
       outvalue = 1.0
       int_width = 0.4
@@ -210,14 +210,14 @@
   #===================================================================Elasticity
   [./elasticity_tensor_matrix]
     type = ComputeElasticityTensor
-    C_ijkl = '81.3768 0.4'
-    fill_method = symmetric_isotropic_E_nu
+    C_ijkl = '184.30 126.46 126.46 184.30 126.46 184.30 115.68 115.68 115.68'
+    fill_method = symmetric9
     base_name = stiffness_matrix
   [../]
   [./elasticity_tensor_precipitate]
 		type = ComputeElasticityTensor
 		C_ijkl = '81.3768 0.4'
-    fill_method = symmetric_isotropic_E_nu
+		fill_method = symmetric_isotropic_E_nu
 		base_name = stiffness_precipitate
 	[../]
   [./effective_elastic_tensor]

@@ -216,8 +216,8 @@
   [../]
   [./elasticity_tensor_precipitate]
 		type = ComputeElasticityTensor
-		C_ijkl = '81.3768 0.4'
-    fill_method = symmetric_isotropic_E_nu
+		C_ijkl = '40.6884 0.4'
+		fill_method = symmetric_isotropic_E_nu
 		base_name = stiffness_precipitate
 	[../]
   [./effective_elastic_tensor]

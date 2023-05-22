@@ -81,21 +81,24 @@ void BinaryStrainMismatchTensorEigenstrain::computeQpProperties()
       // Construction of rank two tensor for access to the built-in inversion method
 			RankFourTensor dCwave_deta = - _delta_elasticity[_qp] * _dw_alpha_dop[_qp];
 
-			const RankThreeTensor dCwave_deta_3 = dCwave_deta.mixedProductIjklJ(_n[_qp]);
 			Real dCwave_deta_2_array[3][3] = {};
 
 			unsigned int n_dim = LIBMESH_DIM;
 			for (unsigned int i = 0; i < n_dim; i++)
-			{
-				for (unsigned int j = 0; j < n_dim; j++)
-				{
-					Real mult_result = 0.0;
-					for (unsigned int k = 0; k < n_dim; k++)
-						mult_result += dCwave_deta_3(i,j,k) * _n[_qp](k);
-
-						dCwave_deta_2_array[i][j] = mult_result;
-					}
-				}
+        	{
+          	for (unsigned int l = 0; l < n_dim; l++)
+          		{
+            	Real mult_result = 0.0;
+            	for (unsigned int k = 0; k < n_dim; k++)
+            		{
+              		for (unsigned int j = 0; j < n_dim; j++)
+              			{
+              			mult_result += dCwave_deta(i,j,k,l) * _n[_qp](k) *_n[_qp](j);
+              			}
+            		}
+            	dCwave_deta_2_array[i][l] = mult_result;
+          		}
+        	}
 
 				const RankTwoTensor dCwave_deta_2(dCwave_deta_2_array[0][0],dCwave_deta_2_array[1][1],
 																					dCwave_deta_2_array[2][2],dCwave_deta_2_array[2][1],

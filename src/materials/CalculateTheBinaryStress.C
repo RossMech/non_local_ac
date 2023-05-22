@@ -74,10 +74,18 @@ CalculateTheBinaryStress::computeQpStress()
     // Calculation of Jacobian
     // Multiplication with normal vector
 
-    RankThreeTensor delta_elasticity_3 = _delta_elasticity[_qp].mixedProductIjklJ(_n[_qp]);
+    unsigned int n_dim = LIBMESH_DIM;
+
+    Real delta_elasticity_3_array[3][3][3] = {};
+
+    for (unsigned int i=0; i < n_dim; i++)
+      for (unsigned int j=0; j < n_dim; j++)
+        for (unsigned int k=0; k < n_dim; k++)
+          for (unsigned int l=0; l < n_dim; l++)
+            delta_elasticity_3_array[i][k][l] += _delta_elasticity[_qp](i,j,k,l) * _n[_qp](j); 
+
     Real da_depsilon_array[3][3][3] = {};
 
-    unsigned int n_dim = LIBMESH_DIM;
 
     for (unsigned int i=0; i < n_dim;i++)
     {
@@ -87,7 +95,7 @@ CalculateTheBinaryStress::computeQpStress()
         {
           for (unsigned int l=0; l < n_dim;l++)
           {
-            da_depsilon_array[i][k][l] += _S_wave_2[_qp](i,j) * delta_elasticity_3(j,k,l);
+            da_depsilon_array[i][k][l] += _S_wave_2[_qp](i,j) * delta_elasticity_3_array[j][k][l];
           }
         }
       }

@@ -142,7 +142,7 @@
   [./const]
     type = GenericConstantMaterial
     prop_names =  'L   gab  kappa   mu'
-    prop_values = '1.0 1.5  0.13    5.5385'
+    prop_values = '1.0 1.5  0.1     7.2'
   [../]
   # =========================================================Switching Functions
   [./wa]
@@ -216,7 +216,7 @@
   [../]
   [./elasticity_tensor_precipitate]
 		type = ComputeElasticityTensor
-		C_ijkl = '81.3768 0.4'
+		C_ijkl = '162.7536 0.4'
     fill_method = symmetric_isotropic_E_nu
 		base_name = stiffness_precipitate
 	[../]

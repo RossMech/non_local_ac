@@ -90,23 +90,25 @@ ConsistentElasticDrivingForce::computeDFDOP(PFFunctionType type)
         // C_wave_2 derivative
         RankFourTensor dCwave_dphi = - delta_elasticity * _dw_alpha_dop[_qp];
 
-        const RankThreeTensor dCwave_dphi_3 = dCwave_dphi.mixedProductIjklJ(_n[_qp]);
-
         unsigned int n_dim = LIBMESH_DIM;
 
         Real dCwave_dphi_2_array[3][3] = {};
 
         for (unsigned int i = 0; i < n_dim; i++)
         {
-          for (unsigned int j = 0; j < n_dim; j++)
+          for (unsigned int l = 0; l < n_dim; l++)
           {
             Real mult_result = 0.0;
             for (unsigned int k = 0; k < n_dim; k++)
-              mult_result += dCwave_dphi_3(i,j,k) * _n[_qp](k);
-
-              dCwave_dphi_2_array[i][j] = mult_result;
+            {
+              for (unsigned int j = 0; j < n_dim; j++)
+              {
+              mult_result += dCwave_dphi(i,j,k,l) * _n[_qp](k) *_n[_qp](j);
+              }
             }
+            dCwave_dphi_2_array[i][l] = mult_result;
           }
+        }
 
           const RankTwoTensor dCwave_dphi_2(dCwave_dphi_2_array[0][0],dCwave_dphi_2_array[1][1],
                                             dCwave_dphi_2_array[2][2],dCwave_dphi_2_array[2][1],
@@ -116,22 +118,24 @@ ConsistentElasticDrivingForce::computeDFDOP(PFFunctionType type)
     // Calculate the system matrix (tensor) for calculation of the mismatch vector (which is responsible for strain redistribution between phases)
     const RankFourTensor wave_elasticity = _w_alpha[_qp]*_elasticity_tensor_beta[_qp] + (1 - _w_alpha[_qp])*_elasticity_tensor_alpha[_qp];
 
-    const RankThreeTensor wave_elasticity_3 = wave_elasticity.mixedProductIjklJ(_n[_qp]);
-
     Real wave_elasticity_2_array[3][3] = {};
 
     for (unsigned int i = 0; i < n_dim; i++)
-      {
-        for (unsigned int j = 0; j < n_dim; j++)
         {
-          Real mult_result = 0.0;
-          for (unsigned int k = 0; k < n_dim; k++)
-            mult_result += wave_elasticity_3(i,j,k) * _n[_qp](k);
+          for (unsigned int l = 0; l < n_dim; l++)
+          {
+            Real mult_result = 0.0;
+            for (unsigned int k = 0; k < n_dim; k++)
+            {
+              for (unsigned int j = 0; j < n_dim; j++)
+              {
+              mult_result += wave_elasticity(i,j,k,l) * _n[_qp](k) *_n[_qp](j);
 
-          wave_elasticity_2_array[i][j] = mult_result;
+              }
+            }
+            wave_elasticity_2_array[i][l] = mult_result;
+          }
         }
-
-      }
 
       // Construction of rank two tensor for access to the built-in inversion method
       const RankTwoTensor wave_elasticity_2(wave_elasticity_2_array[0][0],wave_elasticity_2_array[1][1],
