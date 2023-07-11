@@ -1,7 +1,7 @@
 [Mesh]
   type = FileMesh
   dim = 2
-  file = mesh_case_2.msh
+  file = mesh_case_3.msh
 []
 
 [Adaptivity]
@@ -33,7 +33,7 @@
     order = FIRST
     [./InitialCondition]
       type = SmoothCircleFromFileIC
-      file_name = 'circles_case_2.txt'
+      file_name = 'circles_case_3.txt'
       invalue = 1.0
       outvalue = 0.0
       int_width = 0.3
@@ -172,8 +172,8 @@
   [../]
   [./elasticity_tensor_precipitate]
 		type = ComputeElasticityTensor
-		C_ijkl = '81.3768 0.4'
-    fill_method = symmetric_isotropic_E_nu
+		C_ijkl = '162.7536 0.4'
+		fill_method = symmetric_isotropic_E_nu
 		base_name = stiffness_precipitate
 	[../]
   [./effective_elastic_tensor]

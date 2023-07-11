@@ -1,7 +1,7 @@
 [Mesh]
   type = FileMesh
   dim = 2
-  file = mesh_case_2.msh
+  file = mesh_case_5.msh
 []
 
 [Adaptivity]
@@ -33,7 +33,7 @@
     order = FIRST
     [./InitialCondition]
       type = SmoothCircleFromFileIC
-      file_name = 'circles_case_2.txt'
+      file_name = 'circles_case_5.txt'
       invalue = 1.0
       outvalue = 0.0
       int_width = 0.3
@@ -98,7 +98,7 @@
   [./const]
     type = GenericConstantMaterial
     prop_names =  'L   gab  kappa mu'
-    prop_values = '1.0 1.5  0.18  8.0'
+    prop_values = '1.0 1.5  0.11  13.0'
   [../]
   # =========================================================Switching Functions
   [./wa]
@@ -172,8 +172,8 @@
   [../]
   [./elasticity_tensor_precipitate]
 		type = ComputeElasticityTensor
-		C_ijkl = '81.3768 0.4'
-    fill_method = symmetric_isotropic_E_nu
+		C_ijkl = '40.6884 0.4'
+		fill_method = symmetric_isotropic_E_nu
 		base_name = stiffness_precipitate
 	[../]
   [./effective_elastic_tensor]

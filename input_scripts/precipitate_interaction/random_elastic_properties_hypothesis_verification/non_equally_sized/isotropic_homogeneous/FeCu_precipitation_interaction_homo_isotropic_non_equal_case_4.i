@@ -98,7 +98,7 @@
   [./const]
     type = GenericConstantMaterial
     prop_names =  'L   gab  kappa mu'
-    prop_values = '1.0 1.5  0.18  8.0'
+    prop_values = '1.0 1.5  0.11  13.0'
   [../]
   # =========================================================Switching Functions
   [./wa]
@@ -329,7 +329,6 @@
     type = Exodus
     interval = 10
   [../]
-  exodus = true
   [./csv]
     type = CSV
   [../]
