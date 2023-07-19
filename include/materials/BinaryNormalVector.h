@@ -16,6 +16,7 @@ public:
 protected:
   virtual void computeQpProperties();
 
+  const VariableValue & _u;
   const VariableGradient & _grad_u;
   MaterialProperty<RealGradient> & _normal_vector;
 };

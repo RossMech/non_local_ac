@@ -1,5 +1,6 @@
 .libs
 *.la
+*.mlx
 *.lo
 *.d
 *.o

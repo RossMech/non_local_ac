@@ -16,8 +16,6 @@ BinaryConsistentElasticEnergy::validParams()
   params.addRequiredParam<MaterialPropertyName>("w_alpha","Weight function of alpha phase");
   params.addRequiredParam<MaterialPropertyName>("delta_elasticity","Difference in elasticity tensors");
   params.addRequiredParam<MaterialPropertyName>("elasticity_VT","VT approximation of elasticity tensor");
-  params.addRequiredParam<std::string>("eigenstrain_name_alpha","Eigenstrain name in alpha phase");
-  params.addRequiredParam<std::string>("eigenstrain_name_beta","Eigenstrain name in beta phase");
   return params;
 }
 

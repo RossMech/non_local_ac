@@ -15,6 +15,7 @@ BinaryNormalVector::validParams()
 
 BinaryNormalVector::BinaryNormalVector(const InputParameters & parameters)
   : DerivativeMaterialInterface<Material>(parameters),
+    _u(coupledValue("phase")),
     _grad_u(coupledGradient("phase")),
     _normal_vector(
         declareProperty<RealGradient>(getParam<MaterialPropertyName>("normal_vector_name")))
@@ -26,7 +27,11 @@ BinaryNormalVector::computeQpProperties()
 {
   const Real magnitude = _grad_u[_qp].norm();
 
-  if (magnitude > 1e-8)
+  const Real lower_bound = 1e-8;
+  const Real upper_bound = 1.0 - 1e-8;
+
+  //if (magnitude > 1e-8)
+  if ((_u[_qp] > lower_bound) && (_u[_qp] < upper_bound))
   {
     _normal_vector[_qp] = _grad_u[_qp];
     _normal_vector[_qp] /= magnitude;

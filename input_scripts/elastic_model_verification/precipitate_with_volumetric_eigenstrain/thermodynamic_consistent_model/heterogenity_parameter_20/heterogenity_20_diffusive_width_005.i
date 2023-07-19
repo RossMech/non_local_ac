@@ -19,7 +19,7 @@
       x1 = 0.0
       y1 = 0.0
       radius = 5.0
-      int_width = 0.25
+      int_width = 0.5
     [../]
   [../]
 []
@@ -143,7 +143,7 @@
     delta_elasticity = delta_elasticity
     elasticity_VT = elasticity_VT
     S_wave = S_wave
-    mismatch_tensor = mismatch_tensor
+    #mismatch_tensor = mismatch_tensor
     w_alpha = h_alpha
     phase = eta
     outputs = exodus
