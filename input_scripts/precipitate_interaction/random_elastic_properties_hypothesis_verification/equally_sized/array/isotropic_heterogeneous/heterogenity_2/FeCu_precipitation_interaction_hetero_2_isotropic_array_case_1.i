@@ -5,10 +5,10 @@
 []
 
 [Adaptivity]
-	max_h_level = 4
+	max_h_level = 5
 	marker = marker
 	initial_marker = marker
-	initial_steps = 4
+	initial_steps = 5
 	[./Markers]
 		[./marker]
 			type = ValueRangeMarker
@@ -142,7 +142,7 @@
   [./const]
     type = GenericConstantMaterial
     prop_names =  'L   gab  kappa   mu'
-    prop_values = '1.0 1.5  0.13   5.5385'
+    prop_values = '1.0 1.5  0.065   11.077'
   [../]
   # =========================================================Switching Functions
   [./wa]
@@ -373,7 +373,7 @@
     type = Exodus
     interval = 10
   [../]
-  exodus = true
+  #exodus = true
   [./csv]
     type = CSV
   [../]
