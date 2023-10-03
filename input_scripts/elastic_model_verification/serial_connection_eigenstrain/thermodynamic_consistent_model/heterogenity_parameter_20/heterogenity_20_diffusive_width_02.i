@@ -136,28 +136,28 @@
     eigenstrain_name_alpha = eigenstrain_alpha
     eigenstrain_name_beta = eigenstrain_beta
   [../]
-  [./elastic_energy]
-    type = BinaryConsistentElasticEnergyEigenstrain
-    base_name_alpha = alpha_phase
-    base_name_beta = beta_phase
-    eta = eta
-    mismatch_tensor = mismatch_tensor
-    w_alpha = h_alpha
-    delta_elasticity = delta_elasticity
-    elasticity_VT = elasticity_VT
-    f_name = f_el
-    eigenstrain_name_alpha = eigenstrain_alpha
-    eigenstrain_name_beta = eigenstrain_beta
-  [../]
+ # [./elastic_energy]
+ #   type = BinaryConsistentElasticEnergyEigenstrain
+ #   base_name_alpha = alpha_phase
+ #   base_name_beta = beta_phase
+ #   eta = eta
+ #   mismatch_tensor = mismatch_tensor
+ #   w_alpha = h_alpha
+ #   delta_elasticity = delta_elasticity
+ #   elasticity_VT = elasticity_VT
+ #   f_name = f_el
+ #   eigenstrain_name_alpha = eigenstrain_alpha
+ #   eigenstrain_name_beta = eigenstrain_beta
+ # [../]
 []
 
 [AuxVariables]
   [./eta]
   [../]
-  [./f_elast_aux]
-    order = CONSTANT
-    family = MONOMIAL
-  [../]
+  #[./f_elast_aux]
+  #  order = CONSTANT
+  #  family = MONOMIAL
+  #[../]
 []
 
 [AuxKernels]
@@ -166,11 +166,11 @@
     variable = eta
     function = eta_profile_func
   [../]
-  [./elast_aux]
-    type = MaterialRealAux
-    property = f_el
-    variable = f_elast_aux
-  [../]
+  #[./elast_aux]
+  #  type = MaterialRealAux
+  #  property = f_el
+  #  variable = f_elast_aux
+  #[../]
 []
 
 [Functions]
@@ -182,12 +182,12 @@
   [../]
 []
 
-[Postprocessors]
-  [./total_f]
-    type = ElementIntegralVariablePostprocessor
-    variable = f_elast_aux
-  [../]
-[]
+#[Postprocessors]
+#  [./total_f]
+#    type = ElementIntegralVariablePostprocessor
+#    variable = f_elast_aux
+#  [../]
+#[]
 
 [Executioner]
   type = Steady

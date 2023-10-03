@@ -19,6 +19,7 @@ CalculateTheBinaryStressEigenstrain::validParams()
   params.addRequiredParam<MaterialPropertyName>("delta_elasticity","Difference in elasticity tensors of both phases");
   params.addRequiredParam<MaterialPropertyName>("elasticity_VT","VT approximation of elasticity tensor");
   params.addRequiredParam<MaterialPropertyName>("S_wave","C_alpha*h_beta + C_beta*h_alpha inversed and normalized to second order tensor");
+  params.addRequiredParam<MaterialPropertyName>("mismatch_tensor","Mismatch_strain");
   return params;
 }
 
@@ -76,6 +77,25 @@ CalculateTheBinaryStressEigenstrain::computeQpStress()
     _stress[_qp] = _elasticity_VT[_qp] * _mechanical_strain[_qp] + _w_alpha[_qp]* w_beta * _delta_elasticity[_qp] * _mismatch_tensor[_qp]
                    - _w_alpha[_qp] * _elasticity_tensor_alpha[_qp] * _eigenstrain_alpha[_qp]
                    - w_beta * _elasticity_tensor_beta[_qp] * _eigenstrain_beta[_qp];
+
+    //////////////////////////////////////////////////////////////////////////////////
+    // Check the momentum balance condition on interface
+    RankTwoTensor strain_el_alpha = _mechanical_strain[_qp] + w_beta*_mismatch_tensor[_qp] - _eigenstrain_alpha[_qp]; 
+    RankTwoTensor strain_el_beta = _mechanical_strain[_qp] - _w_alpha[_qp]*_mismatch_tensor[_qp] - _eigenstrain_beta[_qp];
+
+    RankTwoTensor stress_alpha = _elasticity_tensor_alpha[_qp] * strain_el_alpha;
+    RankTwoTensor stress_beta = _elasticity_tensor_beta[_qp] * strain_el_beta;
+
+    RealVectorValue a_error_vect = (stress_alpha - stress_beta) * _n[_qp];
+
+    Real a_error = a_error_vect * a_error_vect;
+
+    //std::cout << "a_error = " << a_error << "\n";
+
+    if (a_error > 1e-8)
+      std::cout << "Mismatch error is big!";
+
+    //////////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////
     // Calculation of Jacobian

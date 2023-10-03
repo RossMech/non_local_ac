@@ -362,7 +362,7 @@
     linear_iteration_ratio = 100
     iteration_window = 1
     growth_factor = 1.1
-    dt=1e-5
+    dt=1e-2
     cutback_factor = 0.5
   [../]
 []
@@ -372,7 +372,6 @@
     type = Exodus
     interval = 10
   [../]
-  exodus = true
   [./csv]
     type = CSV
   [../]

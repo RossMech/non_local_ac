@@ -330,9 +330,23 @@
 
 #preconditioning for the coupled variables.
 [Preconditioning]
-  [./coupling]
+	[./coupling]
     type = SMP
-    full = true
+
+		#full = true
+    full = false
+		off_diag_column = ''
+		off_diag_row = ''
+
+		#petsc_options_iname = '-pc_type  -pc_factor_mat_solver_package'
+	  #petsc_options_value = 'lu mumps'
+		petsc_options_iname = '-pc_type -pc_hypre_type -ksp_type -ksp_gmres_restart -pc_hypre_boomeramg_strong_threshold'
+		petsc_options_value = 'hypre boomeramg gmres 31 0.7'
+
+		solve_type = PJFNK
+
+		trust_my_coupling = true
+		pc_side = default
   [../]
 []
 
@@ -348,22 +362,22 @@
   solve_type = PJFNK
   scheme = bdf2
   end_time = 1e8
-  l_max_its = 20#30
+  l_max_its = 100#30
   nl_max_its = 50#50
 	nl_rel_tol = 1e-7 #1e-8
   nl_abs_tol = 1e-8 #1e-11 -9 or 10 for equilibrium
   l_tol = 1e-4 # or 1e-4
-  petsc_options_iname = '-pc_type  -pc_factor_mat_solver_package'
-  petsc_options_value = 'lu mumps'
+	petsc_options_iname = '-pc_type -pc_hypre_type -ksp_type -ksp_gmres_restart -pc_hypre_boomeramg_strong_threshold'
+	petsc_options_value = 'hypre boomeramg gmres 31 0.7'
   # Time Stepper: Using Iteration Adaptative here. 5 nl iterations (+-1), and l/nl iteration ratio of 100
   # maximum of 5% increase per time step
   [./TimeStepper]
     type = IterationAdaptiveDT
-    optimal_iterations = 7
+    optimal_iterations = 10
     linear_iteration_ratio = 100
     iteration_window = 1
     growth_factor = 1.1
-    dt=1e-2
+    dt=1e-3
     cutback_factor = 0.5
   [../]
 []
@@ -373,7 +387,6 @@
     type = Exodus
     interval = 10
   [../]
-  exodus = true
   [./csv]
     type = CSV
   [../]

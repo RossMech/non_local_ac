@@ -24,7 +24,7 @@ BinaryConsistentElasticEnergyEigenstrain::validParams()
 BinaryConsistentElasticEnergyEigenstrain::BinaryConsistentElasticEnergyEigenstrain(const InputParameters & parameters)
       : DerivativeFunctionMaterialBase(parameters),
       _base_name(isParamValid("base_name") ? getParam<std::string>("base_name") + "_" : ""),
-      _stress(getMaterialPropertyByName<RankTwoTensor>(_base_name + "mechanical_strain")),
+      _stress(getMaterialPropertyByName<RankTwoTensor>(_base_name + "stress")),
       _mechanical_strain(getMaterialPropertyByName<RankTwoTensor>(_base_name + "mechanical_strain")),
       _base_name_alpha(getParam<std::string>("base_name_alpha") + "_"), // read the elasticity tensor of alpha phase
       _elasticity_tensor_alpha(getMaterialPropertyByName<RankFourTensor>(_base_name_alpha+"elasticity_tensor")),
@@ -69,9 +69,7 @@ BinaryConsistentElasticEnergyEigenstrain::computeF()
     RankTwoTensor stress_alpha = _elasticity_tensor_alpha[_qp] * strain_el_alpha;
     RankTwoTensor stress_beta = _elasticity_tensor_beta[_qp] * strain_el_beta;
 
-    return 0.5 * (_stress[_qp].doubleContraction(_mechanical_strain[_qp])
-           - _w_alpha[_qp] * stress_alpha.doubleContraction(_eigenstrain_alpha[_qp])
-           - w_beta * stress_beta.doubleContraction(_eigenstrain_beta[_qp]));
+    return 0.5*(_stress[_qp].doubleContraction(_mechanical_strain[_qp])-_w_alpha[_qp]*stress_alpha.doubleContraction(_eigenstrain_alpha[_qp])-w_beta*stress_beta.doubleContraction(_eigenstrain_beta[_qp]));
   }
 }
 
