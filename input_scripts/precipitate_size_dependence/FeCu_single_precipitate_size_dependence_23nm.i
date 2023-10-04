@@ -1,7 +1,8 @@
+# note: check elastic energy at start of the transformation
 [Mesh]
-  type = FileMesh
-  dim = 2
-  file = square_heterogeneous_r_5.msh
+	type = FileMesh
+	dim = 2
+	file = square_heterogeneous_r_23.msh
 []
 
 [Adaptivity]
@@ -27,20 +28,30 @@
 
 [Variables]
   # Order variables
-  # precipitate
-  [./etaa]
-    family = LAGRANGE
-    order = FIRST
+	[./etaa]
+		family = LAGRANGE
+		order = FIRST
 		[./InitialCondition]
-      type = SmoothCircleIC
-      invalue = 1.0
-      outvalue = 0.0
-      x1 = 0.0
-      y1 = 0.0
-      radius = 5.0
-      int_width = 0.25
+			type = InclinedBoxIC
+			inside = 1.0
+			outside = 0.0
+			a = 113.64
+			b = 4.66
+			theta = 38.6
 		[../]
-  [../]
+	[../]
+	[./etab]
+		family = LAGRANGE
+		order = FIRST
+		[./InitialCondition]
+			type = InclinedBoxIC
+			inside = 0.0
+			outside = 1.0
+			a = 113.64
+			b = 4.66
+			theta = 38.6
+		[../]
+	[../]
   # Displacements
   [./disp_x]
   [../]
@@ -76,11 +87,18 @@
     kappa_name = 'kappa'
   [../]
   [./etaa_bulk]
+    type = ACGrGrMulti
+    variable = etaa
+    v = 'etab'
+    gamma_names = 'gab'
+    mob_name = L
+  [../]
+  [./etaa_elastic]
     type = AllenCahn
     variable = etaa
-    f_name = f_total
+    f_name = f_elast
     mob_name = L
-    args = ''
+    args = 'etab'
   [../]
   [./volume_conservera]
     type = VolumeConservationKernel
@@ -88,6 +106,31 @@
     mob_name = L
 		lagrange_mult = L_mult
 		weight_func = wa_diff
+  [../]
+  # ===========================================================ORDER_PARAMETER_B
+  [./etab_dot]
+    type = TimeDerivative
+    variable = etab
+  [../]
+  [./etab_interface]
+    type = ACInterface
+    variable = etab
+    mob_name = L
+    kappa_name = 'kappa'
+  [../]
+  [./etab_bulk]
+    type = ACGrGrMulti
+    variable = etab
+    v =           'etaa'
+    gamma_names = 'gab'
+    mob_name = L
+  [../]
+  [./etab_elastic]
+    type = AllenCahn
+    variable = etab
+    f_name = f_elast
+    mob_name = L
+    args = 'etaa'
   [../]
   #==============================================================TensorMechanics
   [./TensorMechanics]
@@ -99,8 +142,8 @@
   # ===================================================================Constants
   [./const]
     type = GenericConstantMaterial
-    prop_names =  'L   gab  kappa  mu'
-    prop_values = '1.0 1.5  0.1632    55.1414'
+    prop_names =  'L   gab  kappa   mu'
+    prop_values = '1.0 1.5  0.23    3.1304'
   [../]
   # =========================================================Switching Functions
   [./wa]
@@ -109,39 +152,39 @@
     f_name = wa
     function = '3*etaa*etaa - 2*etaa*etaa*etaa'
   [../]
-  [./wa_diff]
-    type = DerivativeParsedMaterial
-    args = etaa
-    f_name = wa_diff
-    material_property_names = 'dwa:=D[wa(etaa),etaa]'
-    function = 'dwa'
-  [../]
+	[./wa_diff]
+		type = DerivativeParsedMaterial
+		args = etaa
+		f_name = wa_diff
+		material_property_names = 'dwa:=D[wa(etaa),etaa]'
+		function = 'dwa'
+	[../]
   [./ha]
-    type = DerivativeParsedMaterial
-    f_name = ha
-    args = etaa
-    function = 'etaa*etaa/(etaa*etaa+(1-etaa)*(1-etaa))'
+    type = SwitchingFunctionMultiPhaseMaterial
+    h_name = ha
+    all_etas = 'etab etaa'
+    phase_etas = 'etaa'
   [../]
   [./hb]
-    type = DerivativeParsedMaterial
-    f_name = hb
-    material_property_names = 'ha'
-    function = '1-ha'
+    type = SwitchingFunctionMultiPhaseMaterial
+    h_name = hb
+    all_etas = 'etaa etab'
+    phase_etas = 'etab'
   [../]
   # ============================================================Bulk free energy
   [./f_bulk]
     type = DerivativeParsedMaterial
     f_name = f_bulk
-    args = 'etaa'
+    args = 'etaa etab'
     material_property_names = 'mu gab'
-    function = 'mu*((etaa*etaa*etaa*etaa/4-etaa*etaa/2)+((1-etaa)*(1-etaa)*(1-etaa)*(1-etaa)/4
-    -(1-etaa)*(1-etaa)/2)+(gab*(1-etaa)*(1-etaa)*etaa*etaa)+1/4)'
+    function = 'mu*((etaa*etaa*etaa*etaa/4-etaa*etaa/2)+(etab*etab*etab*etab/4
+    -etab*etab/2)+(gab*etab*etab*etaa*etaa)+1/4)'
   [../]
   #==================================================Lagrange constant functions
   [./psi]
     type = DerivativeParsedMaterial
     f_name = psi
-    args = 'etaa'
+    args = 'etaa etab'
     material_property_names = 'dwa_a:=D[wa(etaa),etaa]'
     function = 'dwa_a'
   [../]
@@ -149,7 +192,7 @@
     type = DerivativeParsedMaterial
     f_name = chi
     args = 'etaa'
-    material_property_names = 'mu_a:=D[f_total(etaa),etaa]'
+    material_property_names = 'mu_a:=D[f_total(etaa,etab),etaa]'
     function = 'mu_a'
   [../]
   [./Lagrange_multiplier]
@@ -161,101 +204,55 @@
   [./stabilization_term_a]
     type = DerivativeParsedMaterial
     args = 'etaa'
-    material_property_names = 'L_mult L dwa_a:=D[wa(etaa),etaa]'
+    material_property_names = 'L_mult L dwa_a:=D[wa(etaa,etab),etaa]'
     function = '-L*L_mult*dwa_a'
     f_name = func_a
   [../]
   #===================================================================Elasticity
   [./elasticity_tensor_matrix]
-    type = ComputeIsotropicElasticityTensor
-    poissons_ratio = 0.3
-    shear_modulus = 100.0
+    type = ComputeElasticityTensor
+    C_ijkl = '145.8518 110.6975 110.6975 145.8518 110.6975 145.8518 104.6428 104.6428 104.6428'
+    fill_method = symmetric9
     base_name = stiffness_matrix
   [../]
   [./elasticity_tensor_precipitate]
-		    type = ComputeIsotropicElasticityTensor
-    poissons_ratio = 0.3
-    shear_modulus = 100.0
+		type = ComputeElasticityTensor
+		C_ijkl = '151.3125 107.1896 108.7447 -1.9095 -5.7284 -13.0552 189.5016 70.5556 5.7284 1.9095 6.0394 187.9465 -3.8189 3.8189 7.0158 19.53 7.0158 1.9095 57.7191 -1.9095 56.1640'
+		fill_method = symmetric21
 		base_name = stiffness_precipitate
 	[../]
-  [./normal]
-    type = BinaryNormalVector
-    phase = etaa
-    normal_vector_name = normal
-  [../]
-  [./eigenstrain_precipitate]
-    type = ComputeEigenstrain
+  [./effective_elastic_tensor]
+		type = CompositeElasticityTensor
+		args = 'etaa etab'
+		tensors = 'stiffness_precipitate stiffness_matrix'
+		weights = 'ha                    hb'
+	[../]
+  [./eigenstrain]
+    type = ComputeVariableEigenstrain
     eigen_base = '0.2417 -0.1213 -0.1107 0.0053 0.0183 -0.029'
-    eigenstrain_name = eigenstrain_precipitate
-    base_name = stiffness_precipitate
-  [../]
-  [./eigenstrain_matrix]
-    type = ComputeEigenstrain
-    eigen_base = '0.0 0.0 0.0 0.0 0.0 0.0'
-    eigenstrain_name = eigenstrain_matrix
-    base_name = stiffness_matrix
+		prefactor = ha
+    args = 'etaa etab'
+    eigenstrain_name = eigenstrain
   [../]
   [./strain]
     type = ComputeSmallStrain
     displacements = 'disp_x disp_y'
-  [../]
-  [./elastichelper]
-    type = BinaryElasticPropertiesHelper
-    base_name_alpha = stiffness_precipitate
-    base_name_beta = stiffness_matrix
-    w_alpha = ha
-    normal = normal
-    delta_elasticity = delta_elasticity
-    elasticity_VT = elasticity_VT
-    S_wave = S_wave
-    eta = etaa
-  [../]
-  [./mismatch_tensor]
-    type = BinaryStrainMismatchTensorEigenstrain
-    eta = etaa
-    w_alpha = ha
-    base_name_alpha = stiffness_precipitate
-    base_name_beta = stiffness_matrix
-    normal = normal
-    mismatch_tensor = mismatch_tensor
-    delta_elasticity = delta_elasticity
-    S_wave = S_wave
-    eigenstrain_name_alpha = eigenstrain_precipitate
-    eigenstrain_name_beta = eigenstrain_matrix
+    eigenstrain_names = eigenstrain
   [../]
   [./stress]
-    type = CalculateTheBinaryStressEigenstrain
-    base_name_alpha = stiffness_precipitate
-    base_name_beta = stiffness_matrix
-    delta_elasticity = delta_elasticity
-    elasticity_VT = elasticity_VT
-    S_wave = S_wave
-    mismatch_tensor = mismatch_tensor
-    w_alpha = ha
-    phase = etaa
-    outputs = exodus
-    normal = normal
-    eigenstrain_name_alpha = eigenstrain_precipitate
-    eigenstrain_name_beta = eigenstrain_matrix
+    type = ComputeLinearElasticStress
   [../]
-  [./elastic_energy]
-    type = BinaryConsistentElasticEnergyEigenstrain
-    base_name_alpha = stiffness_precipitate
-    base_name_beta = stiffness_matrix
-    eta = etaa
-    mismatch_tensor = mismatch_tensor
-    w_alpha = ha
-    delta_elasticity = delta_elasticity
-    elasticity_VT = elasticity_VT
+  [./elastic_free_energy]
+    type = ElasticEnergyMaterial
     f_name = f_elast
-    eigenstrain_name_alpha = eigenstrain_precipitate
-    eigenstrain_name_beta = eigenstrain_matrix
+    args = 'etaa etab'
+    derivative_order = 3
   [../]
   #============================================================Total Free Energy
   [./total_free_energy]
     type = DerivativeSumMaterial
     f_name = f_total
-    args = 'etaa'
+    args = 'etaa etab'
     sum_materials = 'f_elast f_bulk'
   [../]
 []
@@ -284,8 +281,8 @@
     type = TotalFreeEnergy
     variable = f_dens
     f_name = f_total
-    interfacial_vars = 'etaa'
-    kappa_names = 'kappa'
+    interfacial_vars = 'etaa etab'
+    kappa_names = 'kappa kappa'
   [../]
   [./wa_auxkernel]
     type = MaterialRealAux
@@ -353,7 +350,7 @@
   scheme = bdf2
   end_time = 1e8
   l_max_its = 20#30
-  nl_max_its = 10#50
+  nl_max_its = 50#50
 	nl_rel_tol = 1e-7 #1e-8
   nl_abs_tol = 1e-8 #1e-11 -9 or 10 for equilibrium
   l_tol = 1e-4 # or 1e-4
@@ -367,7 +364,7 @@
     linear_iteration_ratio = 100
     iteration_window = 1
     growth_factor = 1.1
-    dt=1e-2
+    dt=1e-5
     cutback_factor = 0.5
   [../]
 []
@@ -377,6 +374,7 @@
     type = Exodus
     interval = 10
   [../]
+  exodus = true
   [./csv]
     type = CSV
   [../]
