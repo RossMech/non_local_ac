@@ -2,7 +2,7 @@
 [Mesh]
 	type = FileMesh
 	dim = 2
-	file = square_heterogeneous_r_38.msh
+	file = square_heterogeneous_r_6.msh
 []
 
 [Adaptivity]
@@ -35,7 +35,7 @@
       type = SmoothCircleIC
       x1 = 0.0
       y1 = 0.0
-      radius = 38.0
+      radius = 6.0
       invalue = 1.0
       outvalue = 0.0
       int_width = 0.3
@@ -48,7 +48,7 @@
 			type = SmoothCircleIC
 			x1 = 0.0
       y1 = 0.0
-      radius = 38.0
+      radius = 6.0
       invalue = 0.0
       outvalue = 1.0
       int_width = 0.3
@@ -62,18 +62,48 @@
 []
 
 [BCs]
-  [./disp_y]
-    type = DirichletBC
-    variable = disp_y
-    boundary = 1
-    value = 0
-  [../]
-  [./disp_x]
-    type = DirichletBC
-    variable = disp_x
-    boundary = 1
-    value = 0
-  [../]
+
+	[./pressure_right_x]
+		type = Pressure
+		boundary = 3
+		variable = disp_x
+		component = 0
+		factor = 0.4
+	[../]
+	[./pressure_right_y]
+		type = Pressure
+		boundary = 3
+		variable = disp_y
+		component = 0
+		factor = 0.4
+	[../]
+	[./pressure_top_x]
+		type = Pressure
+		boundary = 4
+		variable = disp_x
+		component = 1
+		factor = 0.4
+	[../]
+	[./pressure_top_y]
+		type = Pressure
+		boundary = 4
+		variable = disp_y
+		component = 1
+		factor = 0.4
+	[../]
+
+	[./pinning_left]
+		type = DirichletBC
+		variable = disp_x
+		boundary = 5
+		value = 0
+	[../]
+	[./pinning_bottom]
+		type = DirichletBC
+		variable = disp_y
+		boundary = 6
+		value = 0
+	[../]
 []
 
 [Kernels]
@@ -145,7 +175,7 @@
   [./const]
     type = GenericConstantMaterial
     prop_names =  'L   gab  kappa   mu'
-    prop_values = '1.0 1.5  0.38    1.8947'
+    prop_values = '1.0 1.5  0.06    12'
   [../]
   # =========================================================Switching Functions
   [./wa]
