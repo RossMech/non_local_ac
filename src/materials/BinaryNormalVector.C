@@ -1,7 +1,7 @@
 #include "BinaryNormalVector.h"
 #include "MooseMesh.h"
 
-registerMooseObject("PhaseFieldApp", BinaryNormalVector);
+registerMooseObject("NonLocalACApp", BinaryNormalVector);
 
 InputParameters
 BinaryNormalVector::validParams()

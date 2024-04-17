@@ -1,6 +1,6 @@
 #include "ADVolumeConservationKernel.h"
 
-registerMooseObject("MooseApp", ADVolumeConservationKernel);
+registerMooseObject("NonLocalACApp", ADVolumeConservationKernel);
 
 InputParameters
 ADVolumeConservationKernel::validParams()

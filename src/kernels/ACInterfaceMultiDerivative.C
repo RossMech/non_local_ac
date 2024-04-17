@@ -1,6 +1,6 @@
 #include "ACInterfaceMultiDerivative.h"
 
-registerMooseObject("PhaseFieldApp", ACInterfaceMultiDerivative);
+registerMooseObject("NonLocalACApp", ACInterfaceMultiDerivative);
 
 InputParameters
 ACInterfaceMultiDerivative::validParams()

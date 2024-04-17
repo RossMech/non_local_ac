@@ -1,7 +1,7 @@
 #include "BinaryRSApproximation.h"
 #include <iostream>
 
-registerMooseObject("TensorMechanicsApp", BinaryRSApproximation);
+registerMooseObject("NonLocalACApp", BinaryRSApproximation);
 
 InputParameters
 BinaryRSApproximation::validParams()

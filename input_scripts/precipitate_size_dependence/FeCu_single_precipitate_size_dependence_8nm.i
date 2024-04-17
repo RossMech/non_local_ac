@@ -374,7 +374,7 @@
     type = Exodus
     interval = 10
   [../]
-  exodus = true
+  #exodus = true
   [./csv]
     type = CSV
   [../]

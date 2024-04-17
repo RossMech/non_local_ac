@@ -1,6 +1,6 @@
 #include "BinaryElasticPropertiesHelper.h"
 
-registerMooseObject("PhaseFieldApp", BinaryElasticPropertiesHelper);
+registerMooseObject("NonLocalACApp", BinaryElasticPropertiesHelper);
 
 InputParameters
 BinaryElasticPropertiesHelper::validParams()

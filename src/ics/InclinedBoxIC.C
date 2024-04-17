@@ -2,7 +2,7 @@
 #include "FEProblem.h"
 #include "MooseMesh.h"
 
-registerMooseObject("MooseApp", InclinedBoxIC);
+registerMooseObject("NonLocalACApp", InclinedBoxIC);
 
 InputParameters
 InclinedBoxIC::validParams()

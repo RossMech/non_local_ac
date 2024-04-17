@@ -2,7 +2,7 @@
 #include "RankTwoTensor.h"
 #include "RankFourTensor.h"
 
-registerMooseObject("PhaseFieldApp", BinaryStrainMismatchTensorEigenstrain);
+registerMooseObject("NonLocalACApp", BinaryStrainMismatchTensorEigenstrain);
 
 InputParameters
 BinaryStrainMismatchTensorEigenstrain::validParams()

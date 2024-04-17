@@ -1,7 +1,7 @@
 #include "MultiphaseNormalVector.h"
 #include "MooseMesh.h"
 
-registerMooseObject("PhaseFieldApp", MultiphaseNormalVector);
+registerMooseObject("NonLocalACApp", MultiphaseNormalVector);
 
 InputParameters
 MultiphaseNormalVector::validParams()

@@ -4,7 +4,7 @@
 #include "RankFourTensor.h"
 #include "RankTwoTensor.h"
 
-registerMooseObject("PhaseFieldApp", ConsistentElasticDrivingForce);
+registerMooseObject("NonLocalACApp", ConsistentElasticDrivingForce);
 
 InputParameters
 ConsistentElasticDrivingForce::validParams()

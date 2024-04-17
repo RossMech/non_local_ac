@@ -1,7 +1,7 @@
 #include "ElasticEnergyMinimal.h"
 #include "RankTwoTensor.h"
 
-registerMooseObject("PhaseFieldApp", ElasticEnergyMinimal);
+registerMooseObject("NonLocalACApp", ElasticEnergyMinimal);
 
 InputParameters
 ElasticEnergyMinimal::validParams()

@@ -1,7 +1,7 @@
 #include "BinaryRSElasticEnergyEigenstrain.h"
 #include "RankTwoTensor.h"
 
-registerMooseObject("PhaseFieldApp", BinaryRSElasticEnergyEigenstrain);
+registerMooseObject("NonLocalACApp", BinaryRSElasticEnergyEigenstrain);
 
 InputParameters
 BinaryRSElasticEnergyEigenstrain::validParams()

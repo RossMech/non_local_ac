@@ -1,6 +1,6 @@
 #include "CalculateTheBinaryStress.h"
 
-registerMooseObject("TensorMechanicsApp", CalculateTheBinaryStress);
+registerMooseObject("NonLocalACApp", CalculateTheBinaryStress);
 
 InputParameters
 CalculateTheBinaryStress::validParams()

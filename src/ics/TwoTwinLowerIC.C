@@ -3,7 +3,7 @@
 #include "MooseMesh.h"
 #include <math.h>
 
-registerMooseObject("MooseApp", TwoTwinLowerIC);
+registerMooseObject("NonLocalACApp", TwoTwinLowerIC);
 
 InputParameters
 TwoTwinLowerIC::validParams()

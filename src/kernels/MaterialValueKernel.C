@@ -1,6 +1,6 @@
 #include "MaterialValueKernel.h"
 
-registerMooseObject("MooseApp", MaterialValueKernel);
+registerMooseObject("NonLocalACApp", MaterialValueKernel);
 
 InputParameters
 MaterialValueKernel::validParams()

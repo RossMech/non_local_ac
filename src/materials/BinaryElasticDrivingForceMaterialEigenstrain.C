@@ -1,6 +1,6 @@
 #include "BinaryElasticDrivingForceMaterialEigenstrain.h"
 
-registerMooseObject("PhaseFieldApp", BinaryElasticDrivingForceMaterialEigenstrain);
+registerMooseObject("NonLocalACApp", BinaryElasticDrivingForceMaterialEigenstrain);
 
 InputParameters
 BinaryElasticDrivingForceMaterialEigenstrain::validParams()

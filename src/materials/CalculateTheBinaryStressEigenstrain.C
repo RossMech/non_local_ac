@@ -2,7 +2,7 @@
 #include <iostream>
 #include <cstdlib>
 
-registerMooseObject("TensorMechanicsApp", CalculateTheBinaryStressEigenstrain);
+registerMooseObject("NonLocalACApp", CalculateTheBinaryStressEigenstrain);
 
 InputParameters
 CalculateTheBinaryStressEigenstrain::validParams()
