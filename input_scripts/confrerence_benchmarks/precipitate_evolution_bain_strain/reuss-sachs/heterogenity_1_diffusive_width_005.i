@@ -5,10 +5,10 @@
 []
 
 [Adaptivity]
-	max_h_level = 5
+	max_h_level = 4
 	marker = marker
 	initial_marker = marker
-	initial_steps = 5
+	initial_steps = 4
 	[./Markers]
 		[./marker]
 			type = ValueRangeMarker
@@ -38,7 +38,7 @@
       x1 = 0.0
       y1 = 0.0
       radius = 5.0
-      int_width = 0.125
+      int_width = 0.25
 		[../]
   [../]
   # Displacements
@@ -100,7 +100,7 @@
   [./const]
     type = GenericConstantMaterial
     prop_names =  'L   gab  kappa  mu'
-    prop_values = '1.0 1.5  0.0816    110.2829'
+    prop_values = '1.0 1.5  0.1632    55.1414'
   [../]
   # =========================================================Switching Functions
   [./wa]

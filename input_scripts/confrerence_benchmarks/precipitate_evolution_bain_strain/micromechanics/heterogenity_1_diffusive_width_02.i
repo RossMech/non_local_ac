@@ -354,8 +354,8 @@
   end_time = 1e8
   l_max_its = 20#30
   nl_max_its = 10#50
-	nl_rel_tol = 1e-7 #1e-8
-  nl_abs_tol = 1e-8 #1e-11 -9 or 10 for equilibrium
+	nl_rel_tol = 1e-6 #1e-8
+  nl_abs_tol = 1e-7 #1e-11 -9 or 10 for equilibrium
   l_tol = 1e-4 # or 1e-4
   petsc_options_iname = '-pc_type  -pc_factor_mat_solver_package'
   petsc_options_value = 'lu mumps'
@@ -363,10 +363,10 @@
   # maximum of 5% increase per time step
   [./TimeStepper]
     type = IterationAdaptiveDT
-    optimal_iterations = 5
+    optimal_iterations = 3
     linear_iteration_ratio = 100
     iteration_window = 1
-    growth_factor = 1.1
+    growth_factor = 1.01
     dt=1e-2
     cutback_factor = 0.5
   [../]
