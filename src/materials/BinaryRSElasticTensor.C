@@ -65,7 +65,7 @@ BinaryRSElasticTensor::computeQpElasticityTensor()
     RankFourTensor compliance_diff = compliance_a - compliance_b;
 
     // The first derivative
-    RankFourTensor elasticity_tensor_der = w_der * elasticity_RS * elasticity_RS * compliance_diff;
+    RankFourTensor elasticity_tensor_der = -w_der * elasticity_RS * compliance_diff * elasticity_RS;
 
     // Assign the derivative
     (*_delasticity_tensor_deta)[_qp] = elasticity_tensor_der;
