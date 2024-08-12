@@ -109,8 +109,8 @@
     # Constants
     [const]
         type = GenericConstantMaterial
-        prop_names =  'M    gab  kappa    mu    E_alpha E_beta nu'
-        prop_values = '1.0  1.5  1.125   4.0    1300.0  2600.0 0.3'
+        prop_names = 'M    gab  kappa    mu    E_alpha E_beta nu'
+        prop_values = '1.0 1.5  1.125   4.0    1300.0  2600.0 0.3'
     []
     # Switching and weighting functions
     [wa]

@@ -5,15 +5,15 @@
     ymin = 0.0
     xmax = 300.0
     ymax = 300.0
-    nx = 200
-    ny = 100
+    nx = 50
+    ny = 25
 []
 
 [Adaptivity]
-    max_h_level = 4
+    max_h_level = 5
     marker = marker
     initial_marker = marker
-    initial_steps = 4
+    initial_steps = 5
     [Markers]
         [marker]
             type = ValueRangeMarker
@@ -109,8 +109,8 @@
     # Constants
     [const]
         type = GenericConstantMaterial
-        prop_names =  'M    gab  kappa    mu    E_alpha E_beta nu'
-        prop_values = '1.0  1.5  1.125   4.0    1300.0  2600.0 0.3'
+        prop_names = 'M    gab  kappa    mu    E_alpha E_beta nu'
+        prop_values = '1.0 1.5  1.125   4.0    1300.0  2600.0 0.3'
     []
     # Switching and weighting functions
     [wa]
