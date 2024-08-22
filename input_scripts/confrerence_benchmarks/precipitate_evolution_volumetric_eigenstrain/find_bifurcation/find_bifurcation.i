@@ -297,10 +297,10 @@
 #preconditioning for the coupled variables.
 [Preconditioning]
     [./coupling]
-      type = SMP
-      full = true
+        type = SMP
+        full = true
     [../]
-  []
+[]
 
 
 # Termination of simulation when the free energy does not change

@@ -1,19 +1,19 @@
 [Mesh]
   type = GeneratedMesh
   dim = 2
-  xmin = -50.0
-  xmax = 50.0
+  xmin = -100.0
+  xmax = 100.0
   ymin = 0.0
-  ymax = 50.0
-  nx = 1000
-  ny = 500
+  ymax = 100.0
+  nx = 2000
+  ny = 1000
 []
-
+  
 [GlobalParams]
     displacements = 'disp_x disp_y'
     eigenstrain_names = eigenstrain
 []
-
+  
 [Variables]
   # order variable
   [eta]
@@ -30,7 +30,7 @@
     []
   []
 []
-
+  
 [BCs]
     [disp_y]
         type = DirichletBC
@@ -51,7 +51,7 @@
         boundary = 1 # right
     []
 []
-
+ 
 [Kernels]
   # dummy kernel for phase-field variable
   [eta_dot]
@@ -59,7 +59,7 @@
     variable = eta
   []
 []
-
+  
 # Solid Mechanics action
 [Physics/SolidMechanics/QuasiStatic]
     [all]
@@ -67,7 +67,7 @@
       strain = SMALL
     []
 []
-
+  
 [Materials]
     # weighting functions
     [ha]
@@ -120,14 +120,14 @@
         coupled_variables = eta
     []
 []
-
+  
 [AuxVariables]
     [f_dens]
         order = CONSTANT
         family = MONOMIAL
     []
 []
-
+  
 [AuxKernels]
   [f_dens]
     type = MaterialRealAux
@@ -135,14 +135,14 @@
     variable = f_dens
   []
 []
-
+  
 [Postprocessors]
   [total_f]
     type = ElementIntegralVariablePostprocessor
     variable = f_dens
   []
 []
-
+  
 [Executioner]
   type = Transient
   solve_type = PJFNK
@@ -151,7 +151,7 @@
   petsc_options_iname = '-pc_type  -pc_factor_mat_solver_package'
   petsc_options_value = 'lu mumps'
 []
-
+  
 [Outputs]
   exodus = true
   csv = true

@@ -1,19 +1,41 @@
+adaptivity_level = 4
+
+# Calculation of mesh density based on the adaptivity levels
+n_y = '${fparse ceil(2000/(2^adaptivity_level)) }'
+n_x = '${fparse 2*n_y}' 
+
 [Mesh]
   type = GeneratedMesh
   dim = 2
-  xmin = -50.0
-  xmax = 50.0
+  xmin = -200.0
+  xmax = 200.0
   ymin = 0.0
-  ymax = 50.0
-  nx = 1000
-  ny = 500
+  ymax = 200.0
+  nx = ${n_x}
+  ny = ${n_y}
 []
 
+[Adaptivity]
+  max_h_level = ${adaptivity_level}
+  marker = marker
+  initial_marker = marker
+  initial_steps = ${adaptivity_level}
+  [Markers]
+    [marker]
+      type = ValueRangeMarker
+      lower_bound = 0.01
+      upper_bound = 0.99
+      variable = eta
+      third_state = DO_NOTHING
+    []
+  []
+[]
+    
 [GlobalParams]
     displacements = 'disp_x disp_y'
     eigenstrain_names = eigenstrain
 []
-
+    
 [Variables]
   # order variable
   [eta]
@@ -30,7 +52,7 @@
     []
   []
 []
-
+    
 [BCs]
     [disp_y]
         type = DirichletBC
@@ -51,7 +73,7 @@
         boundary = 1 # right
     []
 []
-
+   
 [Kernels]
   # dummy kernel for phase-field variable
   [eta_dot]
@@ -59,7 +81,7 @@
     variable = eta
   []
 []
-
+    
 # Solid Mechanics action
 [Physics/SolidMechanics/QuasiStatic]
     [all]
@@ -67,7 +89,7 @@
       strain = SMALL
     []
 []
-
+    
 [Materials]
     # weighting functions
     [ha]
@@ -120,14 +142,14 @@
         coupled_variables = eta
     []
 []
-
+    
 [AuxVariables]
     [f_dens]
         order = CONSTANT
         family = MONOMIAL
     []
 []
-
+  
 [AuxKernels]
   [f_dens]
     type = MaterialRealAux
@@ -135,14 +157,17 @@
     variable = f_dens
   []
 []
-
+    
 [Postprocessors]
   [total_f]
     type = ElementIntegralVariablePostprocessor
     variable = f_dens
   []
+  [time]
+    type = TimePostprocessor
+  []
 []
-
+    
 [Executioner]
   type = Transient
   solve_type = PJFNK
@@ -151,7 +176,7 @@
   petsc_options_iname = '-pc_type  -pc_factor_mat_solver_package'
   petsc_options_value = 'lu mumps'
 []
-
+    
 [Outputs]
   exodus = true
   csv = true
