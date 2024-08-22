@@ -54,24 +54,24 @@ n_x = '${fparse 2*n_y}'
 []
     
 [BCs]
-    [disp_y]
-        type = DirichletBC
-        variable = disp_y
-        value = 0.0
-        boundary = 0 # bottoms
-    []
-    [disp_x_left]
-        type = DirichletBC
-        variable = disp_x
-        value = 0.0
-        boundary = 3 # left
-    []
-    [disp_x_right]
-        type = DirichletBC
-        variable = disp_x
-        value = 0.0
-        boundary = 1 # right
-    []
+  [disp_y]
+      type = DirichletBC
+      variable = disp_y
+      value = 0.0
+      boundary = 0 # bottoms
+  []
+  [disp_x_left]
+      type = DirichletBC
+      variable = disp_x
+      value = 0.0
+      boundary = 3 # left
+  []
+  [disp_x_right]
+      type = DirichletBC
+      variable = disp_x
+      value = 0.0
+      boundary = 1 # right
+  []
 []
    
 [Kernels]
@@ -101,7 +101,7 @@ n_x = '${fparse 2*n_y}'
     variable = eta
     mob_name = L
     lagrange_mult = L_mult
-    weight_func = wa_diff
+    weight_func = psi
   []
 []
     
@@ -117,38 +117,23 @@ n_x = '${fparse 2*n_y}'
   # Phase-field constants
   [const]
     type = GenericConstantMaterial
-    prop_names = 'L kappa mu'
+    prop_names = 'L kappa omega'
     prop_values = '1.0 0.652866540556528 27.570719100807533'
   []
 
   # weighting functions
   [ha]
-      type = DerivativeParsedMaterial
-      property_name = ha
-      coupled_variables = eta
-      expression = 'eta*eta/(eta*eta+(1-eta)*(1-eta))'
+    type = SwitchingFunctionMaterial
+    eta = eta
+    function_name = ha
   []
+
   [hb]
       type = DerivativeParsedMaterial
       property_name = hb
       material_property_names = 'ha(eta)'
       expression = '1-ha'
       coupled_variables = eta
-  []
-
-  # Weighting function
-  [wa]
-    type = DerivativeParsedMaterial
-    property_name = wa
-    expression = '3*eta*eta-2*eta*eta*eta'
-    coupled_variables = eta
-  []
-  [wa_diff]
-    type = DerivativeParsedMaterial
-    property_name = wa_diff
-    expression = dwa
-    coupled_variables = eta
-    material_property_names = 'dwa:=D[wa(eta),eta]'
   []
   #=========================================Elasticity description
   # elastic constants
@@ -193,8 +178,8 @@ n_x = '${fparse 2*n_y}'
     type = DerivativeParsedMaterial
     property_name = f_bulk
     coupled_variables = eta
-    material_property_names = 'mu'
-    expression = 'mu*eta*eta*(1-eta)*(1-eta)'
+    material_property_names = 'omega'
+    expression = 'omega*eta*eta*(1-eta)*(1-eta)'
   []
   #==========================================Total free energy
   [total_free_energy]
@@ -208,8 +193,8 @@ n_x = '${fparse 2*n_y}'
     type = DerivativeParsedMaterial
     property_name = psi
     coupled_variables = eta
-    material_property_names = 'dwa_a:=D[wa(eta),eta]'
-    expression = 'dwa_a'
+    material_property_names = 'dha_a:=D[ha(eta),eta]'
+    expression = 'dha_a'
   []
   [chi]
     type = DerivativeParsedMaterial
@@ -236,10 +221,6 @@ n_x = '${fparse 2*n_y}'
     family = MONOMIAL
   []
   [f_total]
-    order = CONSTANT
-    family = MONOMIAL
-  []
-  [wa_auxvar]
     order = CONSTANT
     family = MONOMIAL
   []
@@ -272,11 +253,6 @@ n_x = '${fparse 2*n_y}'
     f_name = f_total
     interfacial_vars = eta
     kappa_names = kappa
-  []
-  [wa_auxkernel]
-    type = MaterialRealAux
-    property = wa
-    variable = wa_auxvar
   []
   [psi_auxkernel]
     type = MaterialRealAux
