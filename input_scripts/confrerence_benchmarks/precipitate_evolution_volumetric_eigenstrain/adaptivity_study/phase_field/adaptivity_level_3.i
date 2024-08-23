@@ -1,4 +1,4 @@
-adaptivity_level = 5
+adaptivity_level = 3
 
 # Calculation of mesh density based on the adaptivity levels
 n_y = '${fparse ceil(2000/(2^adaptivity_level)) }'

@@ -1,16 +1,61 @@
+# Normalized energy parameter
+L = 1
+
+#==================Interfacial parameters
+# Interfacial energy
+int_energy = 1.0
+# Interfacial width ratio
+width_ratio = 0.1
+#==================
+
+#==================Elastic parameters
+# Heterogeinity
+heterogeinity = 0.5
+# Eigenstrain magnitude
+eigenstrain_mag = 0.01
+# Shear modulus of the matrix
+mu_matr = 1000.0
+# Shear modulus of the precipitate
+mu_precip = $'{fparse mu_matr*heterogeinity}'
+# Poisson ratio for both both phases
+nu = 0.3
+#==================
+
+#==================Numerical parameters
+# Number of elements per diffusional width
+num_el = 10
+# Level of mesh adaptivity
 adaptivity_level = 5
+#==================
+
+#==================Geometrical parameters
+# Radius of inclusion
+radius = $'{fparse L*int_energy/(mu_matr*eigenstrain_mag^2)}'
+# Size of the simulation domain
+domain_size = $'{fparse 20*radius}'
+# Interfacial width
+int_width = $'{fparse width_ratio*radius}'
+#==================
+
+#==================Phase field parameters
+# Gradient prefactor
+kappa = $'{fparse 1.5*int_energy*int_width/atanh(0.98)}'
+omega = $'{fparse 12.0*atanh(0.98)*int_energy/int_width}'
+#==================
+
+
 
 # Calculation of mesh density based on the adaptivity levels
-n_y = '${fparse ceil(2000/(2^adaptivity_level)) }'
+n_y = '${fparse ceil(domain_size*num_el/(int_width*2^adaptivity_level)) }'
 n_x = '${fparse 2*n_y}' 
 
 [Mesh]
   type = GeneratedMesh
   dim = 2
-  xmin = -600.0
-  xmax = 600.0
+  xmin = -${domain_size}
+  xmax = ${domain_size}
   ymin = 0.0
-  ymax = 600.0
+  ymax = ${domain_size}
   nx = ${n_x}
   ny = ${n_y}
 []
@@ -45,10 +90,10 @@ n_x = '${fparse 2*n_y}'
       type = SmoothCircleIC
       x1 = 0.0
       y1 = 0.0
-      radius = 30.0
+      radius = ${radius}
       invalue = 1.0
       outvalue = 0.0
-      int_width = 3.0
+      int_width = ${int_width}
     []
   []
 []
@@ -338,7 +383,7 @@ n_x = '${fparse 2*n_y}'
 [Outputs]
   [./exodus]
     type = Exodus
-    interval = 50
+    interval = 10
     additional_execute_on = 'FINAL' 
   [../]
   [./csv]
