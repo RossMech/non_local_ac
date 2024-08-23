@@ -22,6 +22,7 @@ BinaryRSElasticTensor::BinaryRSElasticTensor(const InputParameters & parameters)
     _w(getMaterialProperty<Real>("weight")),
     _w_name(getParam<MaterialPropertyName>("weight")),
     _dw_deta(getMaterialPropertyDerivativeByName<Real>(_w_name, _eta_name)),
+    _d2w_deta2(getMaterialPropertyDerivativeByName<Real>(_w_name,_eta_name,_eta_name)),
     _base_name_a(getParam<std::string>("base_name_a") + "_"),
     _elasticity_tensor_a(
         getMaterialPropertyByName<RankFourTensor>(_base_name_a + "elasticity_tensor")),
@@ -31,7 +32,11 @@ BinaryRSElasticTensor::BinaryRSElasticTensor(const InputParameters & parameters)
     _delasticity_tensor_deta(
         isCoupledConstant("phase")
             ? nullptr
-            : &declarePropertyDerivative<RankFourTensor>(_elasticity_tensor_name, _eta_name))
+            : &declarePropertyDerivative<RankFourTensor>(_elasticity_tensor_name, _eta_name)),
+    _d2elasticity_tensor_deta2(
+        isCoupledConstant("phase")
+            ? nullptr
+            : &declarePropertyDerivative<RankFourTensor>(_elasticity_tensor_name, _eta_name,_eta_name))
 {
 }
 
@@ -69,5 +74,26 @@ BinaryRSElasticTensor::computeQpElasticityTensor()
 
     // Assign the derivative
     (*_delasticity_tensor_deta)[_qp] = elasticity_tensor_der;
+  }
+
+  if (_d2elasticity_tensor_deta2)
+  {
+    // Get the first derivative of the weighting function
+    Real w_der = _dw_deta[_qp];
+    // Get the second derivative of the weighting function
+    Real w2_der = _d2w_deta2[_qp];
+
+    // The difference in the compliance of phases
+    RankFourTensor compliance_diff = compliance_a - compliance_b;
+
+    // Second derivative
+    RankFourTensor elasticity_tensor_der2 = 2 * w_der * w_der * elasticity_RS * compliance_diff * elasticity_RS *
+                                                             compliance_diff * elasticity_RS -
+                                            w2_der * elasticity_RS * compliance_diff * elasticity_RS;
+    
+    // Assign the derivative
+    (*_d2elasticity_tensor_deta2)[_qp] = elasticity_tensor_der2;
+
+
   }
 }

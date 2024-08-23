@@ -16,7 +16,7 @@ eigenstrain_mag = 0.01
 # Shear modulus of the matrix
 mu_matr = 1000.0
 # Shear modulus of the precipitate
-mu_precip = $'{fparse mu_matr*heterogeinity}'
+mu_precip = '${fparse mu_matr*heterogeinity}'
 # Poisson ratio for both both phases
 nu = 0.3
 #==================
@@ -30,17 +30,17 @@ adaptivity_level = 5
 
 #==================Geometrical parameters
 # Radius of inclusion
-radius = $'{fparse L*int_energy/(mu_matr*eigenstrain_mag^2)}'
+radius = '${fparse L*int_energy/(mu_matr*eigenstrain_mag^2)}'
 # Size of the simulation domain
-domain_size = $'{fparse 20*radius}'
+domain_size = '${fparse 20*radius}'
 # Interfacial width
-int_width = $'{fparse width_ratio*radius}'
+int_width = '${fparse width_ratio*radius}'
 #==================
 
 #==================Phase field parameters
 # Gradient prefactor
-kappa = $'{fparse 1.5*int_energy*int_width/atanh(0.98)}'
-omega = $'{fparse 12.0*atanh(0.98)*int_energy/int_width}'
+kappa = '${fparse 1.5*int_energy*int_width/atanh(0.98)}'
+omega = '${fparse 12.0*atanh(0.98)*int_energy/int_width}'
 #==================
 
 
@@ -162,8 +162,8 @@ n_x = '${fparse 2*n_y}'
   # Phase-field constants
   [const]
     type = GenericConstantMaterial
-    prop_names = 'L kappa omega'
-    prop_values = '1.0 1.958599621669584 9.190239700269178'
+    prop_names = 'L     kappa     omega'
+    prop_values = '1.0 ${kappa} ${omega}'
   []
 
   # weighting functions
@@ -184,14 +184,14 @@ n_x = '${fparse 2*n_y}'
   # elastic constants
   [elasticity_alpha]
       type = ComputeIsotropicElasticityTensor
-      shear_modulus = 500.0 
-      poissons_ratio = 0.3333
+      shear_modulus = ${mu_precip} 
+      poissons_ratio = ${nu}
       base_name = 'alpha_phase'
   []
   [elasticity_beta]
       type = ComputeIsotropicElasticityTensor
-      shear_modulus = 1000.0
-      poissons_ratio = 0.3333
+      shear_modulus = ${mu_matr}
+      poissons_ratio = ${nu}
       base_name = 'beta_phase'
   []
   [composite_elasticity]
@@ -383,7 +383,7 @@ n_x = '${fparse 2*n_y}'
 [Outputs]
   [./exodus]
     type = Exodus
-    interval = 10
+    interval = 50
     additional_execute_on = 'FINAL' 
   [../]
   [./csv]

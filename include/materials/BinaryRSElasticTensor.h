@@ -23,7 +23,9 @@ protected:
   MaterialPropertyName _w_name;
 
   // The derivative of the weighting function
-  const  MaterialProperty<Real> & _dw_deta;
+  const MaterialProperty<Real> & _dw_deta;
+  // The second derivative of the weighting function
+  const MaterialProperty<Real> & _d2w_deta2;
   
 
   // Elastic stiffness of the first and second phase
@@ -34,5 +36,6 @@ protected:
 
   // Derivative of the elasticity tensor in respect to phase-field variable
   MaterialProperty<RankFourTensor> * _delasticity_tensor_deta;
-  // Second derivative?
+  // Second derivative
+  MaterialProperty<RankFourTensor> * _d2elasticity_tensor_deta2;
 };
