@@ -254,3 +254,6 @@ results/**
 
 # Partitioned meshes
 *_out_cp/**
+
+
+.gz
