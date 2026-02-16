@@ -76,15 +76,8 @@ def particle_position_generation(r_vect: np.typing.NDArray[np.float64],
             if error_free:
                 break
 
-        #print(distance_map)
-
         # If error free approximation was found, then
         x_pos = np.append(x_pos,x_approx)
         y_pos = np.append(y_pos,y_approx)
-
-    print(x_pos)
-    print(y_pos)
-
-    #print(np.stack((x_pos,y_pos)))
 
     return np.stack((x_pos,y_pos))
