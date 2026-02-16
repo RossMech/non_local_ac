@@ -4,17 +4,25 @@ import typing
 import sys
 
 def custom_cdf_random_number_generation(cdf_function: typing.Callable[[float],float],
-                                        range: np.typing.NDArray[np.float64],
+                                        range_min: float,
+                                        range_max: float,
                                         sample_size: int) -> np.typing.NDArray[np.float64]:
 
+    # Check if sample size is positive
+    if sample_size < 0:
+        raise ValueError("Sample size should be positive")
+    
+    if range_max <= range_min:
+        raise ValueError("Range maximal value should be bigger then range minimal value")
+
     # generate a vector of uniformly distributed values in range
-    random_number_uniform = np.random.uniform(range[0],range[1],sample_size)
+    random_number_uniform = np.random.uniform(range_min,range_max,sample_size)
 
     # numerical epsilon
     numerical_epsilon = sys.float_info.epsilon
 
     # Calculation of the numerical values of the 
-    x_grid = np.linspace(range[0]+numerical_epsilon,range[1]-numerical_epsilon,100)
+    x_grid = np.linspace(range_min+numerical_epsilon,range_max-numerical_epsilon,100)
     y_grid = cdf_function(x_grid)
 
     # Check for the NaN values
