@@ -36,7 +36,3 @@ def custom_cdf_random_number_generation(cdf_function: typing.Callable[[float],fl
     random_number_custom = np.interp(random_number_uniform,y_grid,x_grid)
     
     return random_number_uniform
-
-f_x = lambda x: 0.5*x
-
-print(custom_cdf_random_number_generation(f_x,[0, 1.0],100))
