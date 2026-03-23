@@ -25,7 +25,7 @@ NonLocalACApp::~NonLocalACApp() {}
 void
 NonLocalACApp::registerAll(Factory & f, ActionFactory & af, Syntax & syntax)
 {
-  ModulesApp::registerAll(f, af, syntax);
+  ModulesApp::registerAllObjects<NonLocalACApp>(f, af, syntax);
   Registry::registerObjectsTo(f, {"NonLocalACApp"});
   Registry::registerActionsTo(af, {"NonLocalACApp"});
 
