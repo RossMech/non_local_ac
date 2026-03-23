@@ -10,11 +10,12 @@ import sys
 import matplotlib.pyplot as plt
 from custom_cdf_random_number_generation import custom_cdf_random_number_generation
 from particle_position_generation import particle_position_generation
+import pandas as pd
 
 def generate_particles_LSW_distribution(number_of_particles: int,
                                         phase_fraction: float,
                                         mean_radius: float,
-                                        diffusion_width: float) -> np.typing.NDArray[np.float64]:
+                                        diffusion_width: float) -> pd.DataFrame:
 
     # PDF function for the LSW particle distribution
     pdf_LSW = lambda rho: 81/(2**(5/3)*np.exp(1)) * rho**2 * np.exp(3/(2*rho-3))/((rho+3)**(7/3)*(1.5-rho)**(11/3))
@@ -35,4 +36,9 @@ def generate_particles_LSW_distribution(number_of_particles: int,
     particle_data = np.vstack([particle_positions,particle_radii])
     particle_data = np.transpose(particle_data)
 
-    return particle_data
+    # Reshaping the fields for proper output for MOOSE
+    particle_dataframe = pd.DataFrame(particle_data)
+    particle_dataframe = particle_dataframe.rename(columns={0: 'x',1: 'y',2 : 'r'})
+    particle_dataframe.insert(2, 'z', 0.0)
+
+    return particle_dataframe
