@@ -1,8 +1,8 @@
-import paraview.simple
+from paraview.simple import *
 import numpy as np
 from paraview.vtk.numpy_interface import dataset_adapter as dsa
 from paraview import servermanager
-from vtk.util import numpy_support
+from vtk.util.numpy_support import vtk_to_numpy
 import matplotlib.pyplot as plt
 
 def modified_fft_transformation2(eta_2d: np.typing.NDArray[np.float64]) -> np.typing.NDArray[np.float64]:
@@ -34,63 +34,68 @@ def modified_fft_transformation2(eta_2d: np.typing.NDArray[np.float64]) -> np.ty
 
     return I_convoluted, qlad2
 
-def handle_single_simulation(simulation_full_name: str,
-                             resample_number: int):
-    # Read the files
-    reader = paraview.simple.ExodusIIReader(FileName=simulation_full_name)
-    reader.UpdatePipeline()
-    scene = paraview.simple.GetAnimationScene()
-    scene.UpdateAnimationUsingDataTimeSteps()
-    scene.GoToFirst()
+def handle_single_simulation_FFT(simulation_full_name: str,
+                                 resample_number: int,
+                                 deformation_bool: bool):
 
-    # Undeform the simulation mesh
-    warpByVector1 = paraview.simple.WarpByVector(registrationName='WarpByVector1', Input=reader)
-    # Properties modified on warpByVector1
-    warpByVector1.ScaleFactor = -1.0
+    # Read file
+    reader = ExodusIIReader(FileName=simulation_full_name)
+    reader.UpdatePipelineInformation()
 
-    # Resample the mesh onto the regular grid
-    resampleToImage1 = paraview.simple.ResampleToImage(registrationName='ResampleToImage1', Input=warpByVector1)
-    resampleToImage1.SamplingDimensions = [resample_number, resample_number, 1]
+    # Get timesteps
+    timestep_values = np.array(reader.TimestepValues)
 
-    # Get the values of the time steps
-    source = paraview.simple.GetActiveSource()
-    timestep_values = source.TimestepValues
-    
-    # Commands for handling the timesteps
-    render_view = paraview.simple.GetActiveViewOrCreate('RenderView')
-    animation_scene = paraview.simple.GetAnimationScene()
+    # Undeform mesh
+    if deformation_bool:
+        warpByVector1 = WarpByVector(Input=reader)
+        warpByVector1.ScaleFactor = -1.0
+        warpByVector1.Vectors = 'disp_'
 
-    # Output array
-    output_array = np.zeros((resample_number,resample_number,timestep_values.length))
+        # Resample onto regular grid
+        resampleToImage1 = ResampleToImage(Input=warpByVector1)
+    else:
+        resampleToImage1 = resampleToImage(Input=reader)
 
-    # Iteration over timesteps and handling data
-    i = 0
-    for t in timestep_values:
-        # Go to the current time step
-        animation_scene.AnimationTime = t
+    resampleToImage1.SamplingDimensions = [resample_number,resample_number,1]
 
-        # Update the pipeline
-        render_view.Update()
-        
-        # Get the data for field variable
-        data = dsa.WrapDataObject(servermanager.Fetch(resampleToImage1))
-        eta_2d  = data.PointData["eta"]  # numpy array, shape (n_points,)
 
-        # Get the coordinates values for sorting the eta values onto 2D shape
-        coords = numpy_support.vtk_to_numpy(data.GetPoints().GetData())  # shape (n_points, 3)
-        coords = coords[:,:-1]
-        x, y = coords[:,0], coords[:,1]
+    # Allocate output
+    output_array = np.zeros(
+        (resample_number, resample_number, len(timestep_values))
+    )
 
-        # Get unique coordinates to determine grid dimensions
-        idx = np.lexsort((x, y))  # sort y-first, then x
+    # Loop over timesteps
+    for i, t in enumerate(timestep_values):
+
+        # Update pipeline to current timestep
+        resampleToImage1.UpdatePipeline(time=t)
+
+        # Fetch data
+        vtk_data = servermanager.Fetch(resampleToImage1)
+
+        # Point data
+        eta = vtk_to_numpy(vtk_data.GetPointData().GetArray("eta"))
+
+
+        # Coordinates
+        coords = vtk_to_numpy(
+            vtk_data.GetPoints().GetData()
+        )
+
+        x = coords[:, 0]
+        y = coords[:, 1]
+
+        # Recover structured grid ordering
+        nx = len(np.unique(x))
+        ny = len(np.unique(y))
+
+        idx = np.lexsort((x, y))
         eta_2d = eta[idx].reshape(ny, nx)
 
-        # Get the modified FFT
+        # FFT
+        print('Working on time step:',i+1,'/',len(timestep_values))
         fft_output, q = modified_fft_transformation2(eta_2d)
 
-        # Save the output array 
-        output_array[:,:,i] = fft_output
-
-        i = i+1
+        output_array[:, :, i] = fft_output
 
     return output_array, q, timestep_values
