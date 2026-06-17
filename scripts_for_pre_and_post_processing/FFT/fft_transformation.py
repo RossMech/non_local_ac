@@ -94,11 +94,3 @@ def handle_single_simulation(simulation_full_name: str,
         i = i+1
 
     return output_array, q, timestep_values
-
-# Plotting
-fig, ax = plt.subplots()
-
-fft_output, q = modified_fft_transformation2(eta_2d)
-ax.pcolormesh(q,q,np.log(fft_output))
-
-fig.savefig("output.png")
