@@ -1,4 +1,5 @@
-.libs
+*.npy
+*.libs
 *.la
 *.mlx
 *.lo

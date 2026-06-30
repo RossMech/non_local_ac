@@ -3,7 +3,6 @@ import numpy as np
 from paraview.vtk.numpy_interface import dataset_adapter as dsa
 from paraview import servermanager
 from vtk.util.numpy_support import vtk_to_numpy
-import matplotlib.pyplot as plt
 
 def modified_fft_transformation2(eta_2d: np.typing.NDArray[np.float64]) -> np.typing.NDArray[np.float64]:
 

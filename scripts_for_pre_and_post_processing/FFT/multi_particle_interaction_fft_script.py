@@ -4,7 +4,7 @@ from fft_transformation import handle_single_simulation_FFT
 import numpy as np
 
 # Discretization size vector
-n_discr = [6656,4576,2944,2176,1504]
+n_discr = [4576,4576,2944,2176,1504]
 
 # Root folder, containing the simulation results
 root_folder_path = '/media/rnizinkovskyi/Data_drive/Calculations_archive/Fe_Cu_Project/non_local_ac/precipitate_interaction/multi_particle_interaction/homogeneous_isotropic'
