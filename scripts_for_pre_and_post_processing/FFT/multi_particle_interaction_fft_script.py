@@ -7,7 +7,7 @@ import numpy as np
 n_discr = [4576,4576,2944,2176,1504]
 
 # Root folder, containing the simulation results
-root_folder_path = '/media/rnizinkovskyi/Data_drive/Calculations_archive/Fe_Cu_Project/non_local_ac/precipitate_interaction/multi_particle_interaction/homogeneous_isotropic'
+root_folder_path = '/media/rnizinkovskyi/internal_hdd/Calculations_archive/Fe_Cu_Project/non_local_ac/precipitate_interaction/multi_particle_interaction/no_elasticity'
 
 root_folder_content = os.scandir(root_folder_path)
 
@@ -25,17 +25,8 @@ for root_folder_entry in root_folder_content:
         fraction_folder_content = os.scandir(root_folder_entry.path)
 
         # Discretization value 
-        match fraction_value:
-            case 1:
-                n_fft = n_discr[0]
-            case 2:
-                n_fft = n_discr[1]
-            case 5:
-                n_fft = n_discr[2]
-            case 10:
-                n_fft = n_discr[3]
-            case 20:
-                n_fft = n_discr[4]
+        n_fft_map = {1: n_discr[0], 2: n_discr[1], 5: n_discr[2], 10: n_discr[3], 20: n_discr[4]}
+        n_fft = n_fft_map.get(fraction_value)
 
         # Check if the path for saving files exists and if not -> create directory
         save_path = root_folder_path + "/FFT/" + 'fraction_' + str(fraction_value) + '/'
@@ -53,7 +44,7 @@ for root_folder_entry in root_folder_content:
                 print('Working on FFT for following simulation:')
                 print('Fraction:',fraction_value)
                 print(file_name)
-                output_array, q, time_step_values = handle_single_simulation_FFT(file_path,n_fft,deformation_bool=True)
+                output_array, q, time_step_values = handle_single_simulation_FFT(file_path,n_fft,deformation_bool=False)
 
                 # Save corresponding files
                 np.save(save_path+file_name[:-2],output_array)

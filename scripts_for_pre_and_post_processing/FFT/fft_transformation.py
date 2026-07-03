@@ -38,7 +38,8 @@ def handle_single_simulation_FFT(simulation_full_name: str,
                                  deformation_bool: bool):
 
     # Read file
-    reader = ExodusIIReader(FileName=simulation_full_name)
+    #reader = ExodusIIReader(FileName=simulation_full_name)
+    reader = OpenDataFile(simulation_full_name)
     reader.UpdatePipelineInformation()
 
     # Get timesteps
@@ -53,7 +54,7 @@ def handle_single_simulation_FFT(simulation_full_name: str,
         # Resample onto regular grid
         resampleToImage1 = ResampleToImage(Input=warpByVector1)
     else:
-        resampleToImage1 = resampleToImage(Input=reader)
+        resampleToImage1 = ResampleToImage(Input=reader)
 
     resampleToImage1.SamplingDimensions = [resample_number,resample_number,1]
 
