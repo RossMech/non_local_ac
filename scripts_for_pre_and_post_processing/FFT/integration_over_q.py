@@ -1,56 +1,95 @@
 # Python code to analyze the orientation dependencies in FFT spectra to study the alignment of the particles
-import numpy as np 
-import matplotlib.pyplot as plt
-from scipy.interpolate import RBFInterpolator, LinearNDInterpolator
+import numpy as np
+from scipy.interpolate import RegularGridInterpolator, RBFInterpolator
+import time
 
-def integrate_scattering_data_over_q(scatter_input:np.typing.NDArray[np.float64],
-                                     q_input:np.typing.NDArray[np.float64],
-                                     n_q:int = 200,
-                                     n_theta:int = 200,
-                                     q_cutoff:float = float(np.pi/6)) -> tuple[np.typing.NDArray[np.float64], np.typing.NDArray[np.float64]]:
-    
-    # Generate the vector of q and theta values
+
+def integrate_scattering_data_over_q(
+    scatter_input: np.typing.NDArray[np.float64],
+    q_input: np.typing.NDArray[np.float64],
+    n_q: int = 200,
+    n_theta: int = 200,
+    q_cutoff: float = float(np.pi / 6)
+) -> tuple[np.typing.NDArray[np.float64], np.typing.NDArray[np.float64]]:
+
+    # Generate q and theta vectors
     q_vector = np.linspace(0.0, q_cutoff, n_q)
     theta_vector = np.linspace(-np.pi, np.pi, n_theta)
-    
-    # Generate a mesh based on the vectors
-    q_mesh, theta_mesh = np.meshgrid(q_vector,theta_vector)
 
-    # Transform the q_mesh and theta_mesh into the q_x and q_y
-    q_x_interpolation = q_mesh * np.cos(theta_mesh)
-    q_y_interpolation = q_mesh * np.sin(theta_mesh)
+    # Polar interpolation grid
+    cos_theta = np.cos(theta_vector)
+    sin_theta = np.sin(theta_vector)
 
-    # generating mesh of q-vector values from input file for further flattening and input into the interpolator
-    q_mesh_x, q_mesh_y = np.meshgrid(q_input,q_input)
+    q_x_interpolation = cos_theta[:, None] * q_vector
+    q_y_interpolation = sin_theta[:, None] * q_vector
 
-    # Flattening the vectors for interpolation function
-    q_x_flat = q_mesh_x.ravel()
-    q_y_flat = q_mesh_y.ravel()
-    scattering_data_flat = scatter_input.ravel()
-    points = np.column_stack((q_x_flat,q_y_flat))
+    # ------------------------------------------------------------------
+    # RegularGridInterpolator
+    # ------------------------------------------------------------------
 
-    # Interpolator declaration
-    linear_interpolator = LinearNDInterpolator(points,scattering_data_flat, fill_value=np.nan)
+    linear_interpolator = RegularGridInterpolator(
+        (q_input, q_input),
+        scatter_input,
+        method="linear",
+        bounds_error=False,
+        fill_value=np.nan,
+    )
 
-    # Interpolation using linear interpolator
-    scatter_data_interpolated = linear_interpolator(q_x_interpolation,q_y_interpolation)
+    # Create query points
+    query_points = np.empty(
+        (q_x_interpolation.size, 2),
+        dtype=q_input.dtype
+    )
 
-    # Detect NaN values due to the point being outside of the range of the original data
+    query_points[:, 0] = q_x_interpolation.ravel()
+    query_points[:, 1] = q_y_interpolation.ravel()
+
+    # Perform interpolation
+    scatter_data_interpolated = linear_interpolator(query_points)
+    scatter_data_interpolated = scatter_data_interpolated.reshape(
+        q_x_interpolation.shape
+    )
+
+    # ------------------------------------------------------------------
+    # Fill outside-grid values with RBF extrapolation
+    # ------------------------------------------------------------------
+
     mask = np.isnan(scatter_data_interpolated)
 
-    # If there are any NaN values, the RBF interpolator is used to fill the place (as extrapolator)
-    if mask.any():
-        rbf_interpolator = RBFInterpolator(points,
-                                       scattering_data_flat,
-                                       kernel='linear',
-                                       smoothing=0.0,
-                                       neighbors=50)
-    
-        points_nan = np.column_stack((q_x_interpolation[mask],q_y_interpolation[mask]))
-        scatter_data_interpolated[mask] = rbf_interpolator(points_nan)
+    if np.any(mask):
 
-    # Get the integrated profile by integration in q space for theta=const
-    integrated_profile = np.trapezoid(scatter_data_interpolated,x=q_vector,axis=1)
+        n = q_input.size
+
+        # Build point cloud only if needed
+        points = np.empty((n * n, 2), dtype=q_input.dtype)
+        points[:, 0] = np.repeat(q_input, n)
+        points[:, 1] = np.tile(q_input, n)
+
+        values = scatter_input.ravel()
+
+        rbf_interpolator = RBFInterpolator(
+            points,
+            values,
+            kernel="linear",
+            smoothing=0.0,
+            neighbors=50,
+        )
+
+        query_nan = np.empty((mask.sum(), 2), dtype=q_input.dtype)
+        query_nan[:, 0] = q_x_interpolation[mask]
+        query_nan[:, 1] = q_y_interpolation[mask]
+
+        scatter_data_interpolated[mask] = rbf_interpolator(query_nan)
+
+    # ------------------------------------------------------------------
+    # Integrate over q
+    # ------------------------------------------------------------------
+
+    integrated_profile = np.trapezoid(
+        scatter_data_interpolated,
+        x=q_vector,
+        axis=1,
+    )
 
     return integrated_profile, theta_vector
 
@@ -68,11 +107,14 @@ def handle_integration_whole_simulation(scatter_data:np.typing.NDArray[np.float6
 
     # Iterate over the timesteps to get the whole simulation
     for time_step in np.arange(n_steps):
-        print('Working on time step:',time_step,'/',n_steps)
+        print('Working on time step:',time_step+1,'/',n_steps)
+        start_time = time.time()
         integrated_array[:,time_step], theta_vector = integrate_scattering_data_over_q(scatter_data[:,:,time_step],
                                                                          q_input,
                                                                          n_q,
                                                                          n_theta,
                                                                          q_cutoff)
-
+        end_time = time.time()
+        run_time = end_time - start_time
+        print('The calculation_time:',run_time)
     return integrated_array, theta_vector

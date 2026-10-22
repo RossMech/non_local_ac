@@ -215,6 +215,12 @@ n_x = '${fparse 2*n_y}'
     base_name = 'beta_phase'
     args = ''
   []
+  [eigenstrain_dummy]
+    type = ComputeVariableEigenstrain
+    eigen_base = '0.0 0.0 0.0 0.0 0.0 0.0'
+    eigenstrain_name = 'dummy'
+    args = ''
+  []
   [elastic_helper]
     type = BinaryElasticPropertiesHelper
     base_name_alpha = alpha_phase

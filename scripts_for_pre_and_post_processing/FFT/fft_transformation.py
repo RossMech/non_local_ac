@@ -3,34 +3,29 @@ import numpy as np
 from paraview.vtk.numpy_interface import dataset_adapter as dsa
 from paraview import servermanager
 from vtk.util.numpy_support import vtk_to_numpy
+import time
 
 def modified_fft_transformation2(eta_2d: np.typing.NDArray[np.float64]) -> np.typing.NDArray[np.float64]:
-
-    # Discrete FFT transformation
-    eta_fft = np.fft.fft2(eta_2d)
-    # Shift of zero frequencies to center
-    eta_fft = np.fft.fftshift(eta_fft)
-
-    # Discrete scatter density
-    I_discrete = np.absolute(eta_fft)
-    I_discrete = np.power(I_discrete,2)
-
+    # Discrete FFT transformation, zero-frequency shifted to center
+    eta_fft = np.fft.fftshift(np.fft.fft2(eta_2d))
+    # Discrete scatter density |F|^2, computed directly from real/imag parts
+    # (avoids abs() -> sqrt -> squared back, which is wasted work)
+    I_discrete = eta_fft.real**2 + eta_fft.imag**2
     # Calculate values of the frequency vectors
-    # Number of points 
+    # Number of points
     nx = eta_2d.shape[0]
-    nxd2 = nx/2
-
+    nxd2 = nx / 2
     iqcent = nxd2 + 1
-    iql = np.linspace(1,nx,nx) - iqcent
-    qlad2 = np.pi*iql/nx + 1e-8
-
+    iql = np.arange(1, nx + 1, dtype=np.float64) - iqcent
+    qlad2 = np.pi * iql / nx + 1e-8
     # Weighting function for convolution in Fourier space
-    sincsqr_vect = np.pow(np.sin(qlad2)/qlad2,2)
-    sincsqr_matrix = np.outer(sincsqr_vect,sincsqr_vect)
-
-    # Convoluted I_density
-    I_convoluted = I_discrete * sincsqr_matrix
-
+    # np.sinc(x) = sin(pi*x)/(pi*x); with x = qlad2/pi this is exactly
+    # sin(qlad2)/qlad2 as one vectorized call instead of sin() + divide
+    sincsqr_vect = np.square(np.sinc(qlad2 / np.pi))
+    # Convoluted I_density, applied via broadcasting instead of building
+    # the full outer-product matrix first (saves one O(nx^2) allocation)
+    I_convoluted = I_discrete * sincsqr_vect[:, np.newaxis]
+    I_convoluted *= sincsqr_vect[np.newaxis, :]
     return I_convoluted, qlad2
 
 def handle_single_simulation_FFT(simulation_full_name: str,
@@ -38,63 +33,70 @@ def handle_single_simulation_FFT(simulation_full_name: str,
                                  deformation_bool: bool):
 
     # Read file
-    #reader = ExodusIIReader(FileName=simulation_full_name)
     reader = OpenDataFile(simulation_full_name)
     reader.UpdatePipelineInformation()
 
     # Get timesteps
-    timestep_values = np.array(reader.TimestepValues)
+    timestep_values = np.asarray(reader.TimestepValues)
+    n_timesteps = len(timestep_values)
 
-    # Undeform mesh
+    # Undeform mesh if requested
     if deformation_bool:
-        warpByVector1 = WarpByVector(Input=reader)
-        warpByVector1.ScaleFactor = -1.0
-        warpByVector1.Vectors = 'disp_'
-
-        # Resample onto regular grid
-        resampleToImage1 = ResampleToImage(Input=warpByVector1)
+        warp = WarpByVector(Input=reader)
+        warp.ScaleFactor = -1.0
+        warp.Vectors = "disp"
+        resample = ResampleToImage(Input=warp)
     else:
-        resampleToImage1 = ResampleToImage(Input=reader)
+        resample = ResampleToImage(Input=reader)
 
-    resampleToImage1.SamplingDimensions = [resample_number,resample_number,1]
+    resample.SamplingDimensions = [resample_number, resample_number, 1]
 
+    # ------------------------------------------------------------------
+    # Determine structured grid ordering ONCE
+    # ------------------------------------------------------------------
+    resample.UpdatePipeline(time=timestep_values[0])
 
+    vtk_data = servermanager.Fetch(resample)
+
+    coords = vtk_to_numpy(vtk_data.GetPoints().GetData())
+
+    x = coords[:, 0]
+    y = coords[:, 1]
+
+    nx = np.unique(x).size
+    ny = np.unique(y).size
+
+    idx = np.lexsort((x, y))
+
+    # ------------------------------------------------------------------
     # Allocate output
-    output_array = np.zeros(
-        (resample_number, resample_number, len(timestep_values))
+    # ------------------------------------------------------------------
+    output_array = np.empty(
+        (resample_number, resample_number, n_timesteps),
+        dtype=np.float64,
     )
 
-    # Loop over timesteps
+    # ------------------------------------------------------------------
+    # Time loop
+    # ------------------------------------------------------------------
     for i, t in enumerate(timestep_values):
 
-        # Update pipeline to current timestep
-        resampleToImage1.UpdatePipeline(time=t)
+        print(f"Working on time step: {i+1}/{n_timesteps}")
+        start = time.perf_counter()
 
-        # Fetch data
-        vtk_data = servermanager.Fetch(resampleToImage1)
+        resample.UpdatePipeline(time=t)
+        vtk_data = servermanager.Fetch(resample)
 
-        # Point data
-        eta = vtk_to_numpy(vtk_data.GetPointData().GetArray("eta"))
-
-
-        # Coordinates
-        coords = vtk_to_numpy(
-            vtk_data.GetPoints().GetData()
+        eta = vtk_to_numpy(
+            vtk_data.GetPointData().GetArray("eta")
         )
 
-        x = coords[:, 0]
-        y = coords[:, 1]
-
-        # Recover structured grid ordering
-        nx = len(np.unique(x))
-        ny = len(np.unique(y))
-
-        idx = np.lexsort((x, y))
         eta_2d = eta[idx].reshape(ny, nx)
 
-        # FFT
-        print('Working on time step:',i+1,'/',len(timestep_values))
         fft_output, q = modified_fft_transformation2(eta_2d)
+        end = time.perf_counter()
+
+        print(f"Calculation time: {end-start:.3f} s")
 
         output_array[:, :, i] = fft_output
 

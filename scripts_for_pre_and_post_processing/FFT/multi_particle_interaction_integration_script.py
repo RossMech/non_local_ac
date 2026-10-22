@@ -5,14 +5,14 @@ import numpy as np
 
 # Vector for interpolation point number
 n_theta = [4576,4576,2944,2176,1504]
-n_q = [4576,4576,2944,2176,1504]
+n_q = [1526,1526,982,726,502]
 
 # q cutoff value for the integration
 q_cutoff = float(np.pi/6)
 
 # Iterate over the elements in root folder to find the "fraction" folders, containing simulations
 # Root folder with FFT data
-root_folder_path = '/media/rnizinkovskyi/internal_hdd/Calculations_archive/Fe_Cu_Project/non_local_ac/precipitate_interaction/multi_particle_interaction/homogeneous_isotropic/FFT'
+root_folder_path = '/media/rnizinkovskyi/internal_hdd/Calculations_archive/Fe_Cu_Project/non_local_ac/precipitate_interaction/multi_particle_interaction/Fe_Cu_parameters/FFT'
 
 root_folder_content = os.scandir(root_folder_path)
 
@@ -51,9 +51,9 @@ for root_folder_entry in root_folder_content:
 
             file_match = pattern.match(file_name)
 
-            if match:
+            if file_match and fraction_value == 1 and '2' in file_name:
                 # Get the number of simulation
-                simulation_number = int(match.group(1))
+                simulation_number = int(file_match.group(1))
 
                 print('Working on integration of following pattern:')
                 print('Fraction:',fraction_value)

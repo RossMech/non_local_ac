@@ -7,7 +7,7 @@ import numpy as np
 n_discr = [4576,4576,2944,2176,1504]
 
 # Root folder, containing the simulation results
-root_folder_path = '/media/rnizinkovskyi/internal_hdd/Calculations_archive/Fe_Cu_Project/non_local_ac/precipitate_interaction/multi_particle_interaction/no_elasticity'
+root_folder_path = '/media/rnizinkovskyi/internal_hdd/Calculations_archive/Fe_Cu_Project/non_local_ac/precipitate_interaction/multi_particle_interaction/Fe_Cu_parameters'
 
 root_folder_content = os.scandir(root_folder_path)
 
@@ -40,11 +40,11 @@ for root_folder_entry in root_folder_content:
             file_path = fraction_folder_entry.path
             
             # Check if the file has a right exodus extension and perform the post-processing
-            if file_name.endswith('.e'):
+            if file_name.endswith('.e') and '1' in file_name and fraction_value==20:
                 print('Working on FFT for following simulation:')
                 print('Fraction:',fraction_value)
                 print(file_name)
-                output_array, q, time_step_values = handle_single_simulation_FFT(file_path,n_fft,deformation_bool=False)
+                output_array, q, time_step_values = handle_single_simulation_FFT(file_path,n_fft,deformation_bool=True)
 
                 # Save corresponding files
                 np.save(save_path+file_name[:-2],output_array)
